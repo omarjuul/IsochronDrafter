@@ -10,7 +10,7 @@ namespace IsochronDrafter
 
         public ServerWindow()
         {
-            this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             InitializeComponent();
             MaximizeBox = false;
             tbFile.Text = isochron.Default.SetFile;
@@ -41,7 +41,7 @@ namespace IsochronDrafter
         private void button3_Click(object sender, EventArgs e)
         {
             DialogResult result = openFileDialog1.ShowDialog();
-            if (result == System.Windows.Forms.DialogResult.OK)
+            if (result == DialogResult.OK)
             {
                 tbFile.Text = openFileDialog1.FileName;
             }

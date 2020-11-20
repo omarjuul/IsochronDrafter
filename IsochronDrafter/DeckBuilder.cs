@@ -102,7 +102,7 @@ namespace IsochronDrafter
         private void LayoutControls()
         {
             if (VerticalScroll.Visible)
-                AutoScrollMargin = new Size(0, System.Windows.Forms.SystemInformation.HorizontalScrollBarHeight);
+                AutoScrollMargin = new Size(0, SystemInformation.HorizontalScrollBarHeight);
             else
                 AutoScrollMargin = new Size(0, 0);
 
@@ -139,7 +139,7 @@ namespace IsochronDrafter
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            if (e.Button == MouseButtons.Left)
             {
                 DeckBuilderCard card = GetCardFromCoor(e.X, e.Y);
                 if (card == null)
@@ -148,7 +148,7 @@ namespace IsochronDrafter
                 draggedCard.selected = true;
                 draggedCard.Invalidate();
             }
-            else if (e.Button == System.Windows.Forms.MouseButtons.Middle || e.Button == System.Windows.Forms.MouseButtons.Right)
+            else if (e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right)
             {
                 DeckBuilderCard card = GetCardFromCoor(e.X, e.Y);
                 if (card == null)
@@ -220,7 +220,7 @@ namespace IsochronDrafter
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            if (e.Button == MouseButtons.Left)
             {
                 if (draggedCard == null)
                     return;
@@ -254,7 +254,7 @@ namespace IsochronDrafter
                 indicator.Hide();
                 Invalidate();
             }
-            else if (e.Button == System.Windows.Forms.MouseButtons.Middle || e.Button == System.Windows.Forms.MouseButtons.Right)
+            else if (e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right)
                 cardWindow.Hide();
         }
         private int[] GetColumnRowNumFromCoor(int x, int y)
