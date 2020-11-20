@@ -12,7 +12,7 @@ namespace IsochronDrafter
 {
     public class DraftServer
     {
-        ServerWindow serverWindow;
+        readonly ServerWindow serverWindow;
         public TcpServer server;
 
         private readonly List<string> lands = new List<string>();

@@ -6,9 +6,9 @@ namespace IsochronDrafter
 {
     public class DraftClient
     {
-        DraftWindow draftWindow;
-        EventDrivenTCPClient client;
-        string alias;
+        readonly DraftWindow draftWindow;
+        readonly EventDrivenTCPClient client;
+        readonly string alias;
         bool draftDone = false;
 
         public DraftClient(DraftWindow draftWindow, string hostname, string alias)
@@ -16,8 +16,7 @@ namespace IsochronDrafter
             this.draftWindow = draftWindow;
             this.alias = alias;
 
-            IPAddress address;
-            if (!IPAddress.TryParse(hostname, out address))
+            if (!IPAddress.TryParse(hostname, out var address))
             {
                 IPHostEntry hostEntry = Dns.GetHostEntry(hostname);
                 if (hostEntry.AddressList.Length == 0)
@@ -31,7 +30,7 @@ namespace IsochronDrafter
             client.DataEncoding = Encoding.UTF8;
             client.ConnectionStatusChanged += new EventDrivenTCPClient.delConnectionStatusChanged(client_ConnectionStatusChanged);
             client.DataReceived += new EventDrivenTCPClient.delDataReceived(client_DataReceived);
-            
+
             client.Connect();
         }
 
@@ -59,7 +58,7 @@ namespace IsochronDrafter
             foreach (string msg in msgs.Split(';'))
                 if (msg.Length > 0)
                     HandleMessage(msg);
-            
+
         }
         private void HandleMessage(string msg)
         {
