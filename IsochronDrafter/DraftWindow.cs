@@ -23,7 +23,7 @@ namespace IsochronDrafter
 
         public DraftWindow()
         {
-            this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             InitializeComponent();
             MaximizeBox = false;
             cardWindow = new CardWindow { Visible = false };
@@ -56,14 +56,14 @@ namespace IsochronDrafter
         {
             ConnectWindow connectWindow = new ConnectWindow();
             DialogResult result = connectWindow.ShowDialog(this);
-            if (result == System.Windows.Forms.DialogResult.Cancel)
+            if (result == DialogResult.Cancel)
                 Close();
-            else if (result == System.Windows.Forms.DialogResult.Abort)
+            else if (result == DialogResult.Abort)
             {
                 WindowState = FormWindowState.Minimized;
                 ShowInTaskbar = false;
             }
-            else if (result == System.Windows.Forms.DialogResult.OK)
+            else if (result == DialogResult.OK)
             {
                 draftClient = new DraftClient(this, connectWindow.GetHostname(), connectWindow.GetAlias());
             }
@@ -82,7 +82,7 @@ namespace IsochronDrafter
                 return;
 
             var url = GetImageUrl(cardName);
-            var httpWebRequest = HttpWebRequest.Create(url);
+            var httpWebRequest = WebRequest.Create(url);
             WebResponse httpWebReponse;
             try
             {
@@ -152,9 +152,9 @@ namespace IsochronDrafter
             booster.RemoveAt(0);
             PrintLine("Received booster with " + booster.Count + (booster.Count == 1 ? " card." : " cards."));
             draftPicker.Populate(booster);
-            this.Invoke(new MethodInvoker(delegate
+            Invoke(new MethodInvoker(delegate
             {
-                if (Form.ActiveForm != this)
+                if (ActiveForm != this)
                     FlashWindow.Flash(this);
             }));
         }

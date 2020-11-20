@@ -74,7 +74,7 @@ namespace IsochronDrafter
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (e.Button == System.Windows.Forms.MouseButtons.Middle || e.Button == System.Windows.Forms.MouseButtons.Right)
+            if (e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right)
             {
                 // Find which card was clicked.
                 int i = GetIndexFromCoor(e.X, e.Y);
@@ -94,7 +94,7 @@ namespace IsochronDrafter
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
-            if (e.Button == System.Windows.Forms.MouseButtons.Middle || e.Button == System.Windows.Forms.MouseButtons.Right)
+            if (e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right)
                 cardWindow.Hide();
         }
 
