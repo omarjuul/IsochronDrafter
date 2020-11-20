@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.Windows.Forms.Layout;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace IsochronDrafter
 {
@@ -25,7 +22,7 @@ namespace IsochronDrafter
 
         public DraftWindow draftWindow;
         public CardWindow cardWindow;
-        private List<List<DeckBuilderCard>[]> columns;
+        private readonly List<List<DeckBuilderCard>[]> columns;
         private DeckBuilderCard draggedCard = null;
         private int[] hoveredColumnRowNum = null;
         public PictureBox indicator;

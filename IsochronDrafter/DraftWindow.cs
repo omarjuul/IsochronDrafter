@@ -13,9 +13,9 @@ namespace IsochronDrafter
 {
     public partial class DraftWindow : Form
     {
-        private static Dictionary<string, string> cardUrls = ReadCardUrls();
-        private static Dictionary<string, Image> cardImages = new Dictionary<string, Image>();
-        private static Image blankCard = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("IsochronDrafter.blank.jpg"));
+        private static readonly Dictionary<string, string> cardUrls = ReadCardUrls();
+        private static readonly Dictionary<string, Image> cardImages = new Dictionary<string, Image>();
+        private static readonly Image blankCard = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("IsochronDrafter.blank.jpg"));
         public CardWindow cardWindow;
         public DraftClient draftClient;
         public bool canPick = true, chatBlank = true;
@@ -37,7 +37,6 @@ namespace IsochronDrafter
         {
             ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
-            var tempDict = new Dictionary<string, string>();
             string bulkUrl = GetJson(bulkEndpoint).download_uri;
             var cardsJson = GetJson(bulkUrl);
 

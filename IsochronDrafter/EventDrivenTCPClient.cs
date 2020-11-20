@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
 namespace IsochronDrafter
 {
@@ -19,9 +17,9 @@ namespace IsochronDrafter
         #endregion
         #region Components, Events, Delegates, and CTOR
         //Timer used to detect receive timeouts
-        private System.Timers.Timer tmrReceiveTimeout = new System.Timers.Timer();
-        private System.Timers.Timer tmrSendTimeout = new System.Timers.Timer();
-        private System.Timers.Timer tmrConnectTimeout = new System.Timers.Timer();
+        private readonly System.Timers.Timer tmrReceiveTimeout = new System.Timers.Timer();
+        private readonly System.Timers.Timer tmrSendTimeout = new System.Timers.Timer();
+        private readonly System.Timers.Timer tmrConnectTimeout = new System.Timers.Timer();
         public delegate void delDataReceived(EventDrivenTCPClient sender, object data);
         public event delDataReceived DataReceived;
         public delegate void delConnectionStatusChanged(EventDrivenTCPClient sender, ConnectionStatus status);
@@ -283,14 +281,14 @@ namespace IsochronDrafter
         }
         #endregion
         #region Properties and members
-        private IPAddress _IP = IPAddress.None;
+        private readonly IPAddress _IP = IPAddress.None;
         private ConnectionStatus _ConStat;
-        private TcpClient _client;
-        private byte[] dataBuffer = new byte[5000];
+        private readonly TcpClient _client;
+        private readonly byte[] dataBuffer = new byte[5000];
         private bool _AutoReconnect = false;
-        private int _Port = 0;
+        private readonly int _Port = 0;
         private Encoding _encode = Encoding.Default;
-        object _SyncLock = new object();
+        readonly object _SyncLock = new object();
         /// <summary>
         /// Syncronizing object for asyncronous operations
         /// </summary>
