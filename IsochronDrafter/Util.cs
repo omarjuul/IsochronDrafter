@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 
 namespace IsochronDrafter
 {
@@ -8,8 +7,6 @@ namespace IsochronDrafter
     {
         public static readonly int version = 6;
         public static Random random = new Random();
-
-        private static WebClient client = new HttpClient();
 
         public static int[] PickN(int max, int count)
         {
