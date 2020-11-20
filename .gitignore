@@ -3,3 +3,4 @@ IsochronDrafter/obj/*
 tcpServer/bin/*
 tcpServer/obj/*
 .vs/
+*.user
