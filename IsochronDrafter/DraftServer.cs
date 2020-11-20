@@ -87,8 +87,7 @@ namespace IsochronDrafter
         private void OnDisconnect(TcpServerConnection connection)
         {
             string alias = GetAlias(connection);
-            string tmp;
-            bool removed = aliases.TryRemove(connection, out tmp);
+            bool removed = aliases.TryRemove(connection, out _);
             serverWindow.PrintLine("<" + alias + "> disconnected.");
             if (removed)
             {
