@@ -7,6 +7,7 @@ namespace IsochronDrafter
     {
         public static readonly int version = 6;
         public static Random random = new Random();
+        public const int PORT = 10024;
 
         public static int[] PickN(int max, int count)
         {

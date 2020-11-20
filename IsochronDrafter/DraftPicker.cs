@@ -11,7 +11,7 @@ namespace IsochronDrafter
         private static readonly float SPACING_PERCENTAGE = .05f;
         private static readonly int CARD_WIDTH = 375;
         private static readonly int CARD_HEIGHT = 523;
-        public List<String> cardNames = new List<string>();
+        public List<string> cardNames = new List<string>();
         public CardWindow cardWindow;
         private float scale, spacing;
         private int perRow;

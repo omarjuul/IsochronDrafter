@@ -19,11 +19,11 @@ namespace IsochronDrafter
         private readonly List<string> nonLands = new List<string>();
         private readonly int packs, numLandsInPack, numNonLandsInPack;
         private string cubeName;
-        public bool draftStarted = false;
-        public int packNumber = 0;
+        private bool draftStarted = false;
+        private int packNumber = 0;
 
-        public ConcurrentDictionary<TcpServerConnection, string> aliases = new ConcurrentDictionary<TcpServerConnection, string>();
-        public DraftState[] draftStates;
+        public readonly ConcurrentDictionary<TcpServerConnection, string> aliases = new ConcurrentDictionary<TcpServerConnection, string>();
+        private DraftState[] draftStates;
 
         public DraftServer(ServerWindow serverWindow, string filename, int packs, int numLandsInPack, int numNonLandsInPack)
         {
@@ -34,8 +34,7 @@ namespace IsochronDrafter
             this.numLandsInPack = numLandsInPack;
             this.numNonLandsInPack = numNonLandsInPack;
 
-            server = new TcpServer();
-            server.Port = 10024;
+            server = new TcpServer { Port = Util.PORT };
             server.OnConnect += OnConnect;
             server.OnDisconnect += OnDisconnect;
             server.OnDataAvailable += OnDataAvailable;

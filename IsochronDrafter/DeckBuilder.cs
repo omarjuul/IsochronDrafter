@@ -47,7 +47,7 @@ namespace IsochronDrafter
             indicator.Hide();
         }
 
-        public void AddCard(String cardName)
+        public void AddCard(string cardName)
         {
             DeckBuilderCard card = new DeckBuilderCard();
             card.SizeMode = PictureBoxSizeMode.Zoom;
@@ -342,7 +342,7 @@ namespace IsochronDrafter
                 draftWindow.SetCardCounts(maindeck, sideboard);
         }
 
-        public String GetCockatriceDeck()
+        public string GetCockatriceDeck()
         {
             Dictionary<string, int> quantities = new Dictionary<string, int>();
             Dictionary<string, int> sideboardQuantities = new Dictionary<string, int>();
