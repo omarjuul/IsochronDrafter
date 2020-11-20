@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Net;
 
 namespace IsochronDrafter
 {
     public class Util
     {
-        public static readonly int version = 5;
-        public static string imageDirectory;
+        public static readonly int version = 6;
         public static Random random = new Random();
+
+        private static WebClient client = new HttpClient();
 
         public static int[] PickN(int max, int count)
         {

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Net;
 using System.Text;
-using System.Net;
 using System.Windows.Forms;
 
 namespace IsochronDrafter
@@ -101,11 +98,6 @@ namespace IsochronDrafter
                 else
                     draftWindow.PrintLine("Unknown error from server: " + parts[1]);
                 client.Disconnect();
-            }
-            else if (parts[0] == "IMAGE_DIR")
-            {
-                Util.imageDirectory = parts[1];
-                draftWindow.PrintLine("Set image directory.");
             }
             else if (parts[0] == "USER_CONNECTED")
             {

@@ -29,5 +29,11 @@
     <Setting Name="MythicPercentage" Type="System.String" Scope="User">
       <Value Profile="(Default)">.125</Value>
     </Setting>
+    <Setting Name="LandsPerPack" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="NonLandsPerPack" Type="System.String" Scope="User">
+      <Value Profile="(Default)">14</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

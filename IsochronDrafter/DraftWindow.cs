@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using System.IO;
-using System.Text.RegularExpressions;
+using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Windows.Forms;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace IsochronDrafter
 {
     public partial class DraftWindow : Form
     {
+        private static Dictionary<string, string> cardUrls = ReadCardUrls();
         private static Dictionary<string, Image> cardImages = new Dictionary<string, Image>();
         private static Image blankCard = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("IsochronDrafter.blank.jpg"));
         public CardWindow cardWindow;
@@ -32,6 +31,20 @@ namespace IsochronDrafter
             draftPicker.cardWindow = cardWindow;
             deckBuilder.draftWindow = this;
             deckBuilder.cardWindow = cardWindow;
+        }
+
+        private static Dictionary<string, string> ReadCardUrls()
+        {
+            const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
+            var tempDict = new Dictionary<string, string>();
+            var bulkUrl = GetJson(bulkEndpoint).download_uri;
+            var cardsJson = GetJson(bulkUrl);
+
+            var cards =
+                from card in cardsJson as JArray
+                select new { name = (string)card["name"], url = (string)card["image_uris"]["border_crop"] };
+
+            return cards.ToDictionary(x => x.name, x => x.url);
         }
 
         private void DraftWindow_Load(object sender, EventArgs e)
@@ -67,25 +80,32 @@ namespace IsochronDrafter
         {
             if (cardImages.ContainsKey(cardName))
                 return;
-            HttpWebRequest httpWebRequest = (HttpWebRequest)HttpWebRequest.Create(Util.imageDirectory + cardName.Replace(",", "").Replace("’", "") + ".full.jpg");
-            HttpWebResponse httpWebReponse;
+
+            var url = GetImageUrl(cardName);
+            var httpWebRequest = HttpWebRequest.Create(url);
+            WebResponse httpWebReponse;
             try
             {
-                httpWebReponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                httpWebReponse = httpWebRequest.GetResponse();
             }
             catch (WebException ex)
             {
-                MessageBox.Show("Couldn't find image for card " + cardName + " at URL " + httpWebRequest.RequestUri.ToString() + ".");
+                MessageBox.Show($"Couldn't find image for card {cardName} at URL {httpWebRequest.RequestUri}.");
                 cardImages.Add(cardName, blankCard);
                 return;
             }
-            Stream stream = httpWebReponse.GetResponseStream();
+            var stream = httpWebReponse.GetResponseStream();
             cardImages.Add(cardName, Image.FromStream(stream));
+        }
+
+        private static string GetImageUrl(string cardName)
+        {
+            return cardUrls[cardName.Replace(",", "").Replace("’", "")];
         }
 
         public void PrintLine(string text)
         {
-            statusText += "\r\n" + text;
+            statusText += Environment.NewLine + text;
             SetStatusTextBox();
         }
         public void SetPackCounts(string message)
@@ -94,7 +114,7 @@ namespace IsochronDrafter
             parts.RemoveAt(0);
             packCounts = "";
             for (int i = 0; i < parts.Count - 1; i += 2)
-                packCounts += "\r\n" + parts[i] + " has " + parts[i + 1] + (parts[i + 1] == "1" ? " pack." : " packs.");
+                packCounts += Environment.NewLine + parts[i] + " has " + parts[i + 1] + (parts[i + 1] == "1" ? " pack." : " packs.");
             SetStatusTextBox();
         }
         public void ClearPackCounts()
@@ -113,9 +133,9 @@ namespace IsochronDrafter
             {
                 statusTextBox.Text = statusText.Trim();
                 if (packCounts != "")
-                    statusTextBox.Text += "\r\n\r\n" + packCounts.Trim();
+                    statusTextBox.Text += $@"{Environment.NewLine}{Environment.NewLine}{packCounts.Trim()}";
                 if (cardCounts != "")
-                    statusTextBox.Text += "\r\n\r\n" + cardCounts.Trim();
+                    statusTextBox.Text += $@"{Environment.NewLine}{Environment.NewLine}{cardCounts.Trim()}";
                 statusTextBox.SelectionStart = statusTextBox.Text.Length;
                 statusTextBox.ScrollToCaret();
             }));
@@ -288,6 +308,29 @@ namespace IsochronDrafter
             toolStripMenuItem8.Checked = false;
             toolStripMenuItem9.Checked = false;
             toolStripMenuItem10.Checked = false;
-        }    
+        }
+
+        private static dynamic GetJson(string url)
+        {
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            WebResponse httpWebReponse;
+            try
+            {
+                httpWebReponse = httpWebRequest.GetResponse();
+            }
+            catch (WebException ex)
+            {
+                MessageBox.Show("Error while downloading asset.");
+                return null;
+            }
+
+            string response;
+            using (var reader = new StreamReader(httpWebReponse.GetResponseStream()))
+            {
+                response = reader.ReadToEnd();
+            }
+
+            return JsonConvert.DeserializeObject(response);
+        }
     }
 }
