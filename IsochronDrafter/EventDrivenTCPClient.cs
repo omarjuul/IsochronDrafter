@@ -12,8 +12,9 @@ namespace IsochronDrafter
     public class EventDrivenTCPClient : IDisposable
     {
         #region Consts/Default values
-        const int DEFAULTTIMEOUT = 5000; //Default to 5 seconds on all timeouts
-        const int RECONNECTINTERVAL = 2000; //Default to 2 seconds reconnect attempt rate
+
+        private const int DEFAULTTIMEOUT = 5000; //Default to 5 seconds on all timeouts
+        private const int RECONNECTINTERVAL = 2000; //Default to 2 seconds reconnect attempt rate
         #endregion
         #region Components, Events, Delegates, and CTOR
         //Timer used to detect receive timeouts
@@ -59,17 +60,20 @@ namespace IsochronDrafter
         }
         #endregion
         #region Private methods/Event Handlers
-        void tmrSendTimeout_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+
+        private void tmrSendTimeout_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             this.ConnectionState = ConnectionStatus.SendFail_Timeout;
             DisconnectByHost();
         }
-        void tmrReceiveTimeout_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+
+        private void tmrReceiveTimeout_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             this.ConnectionState = ConnectionStatus.ReceiveFail_Timeout;
             DisconnectByHost();
         }
-        void tmrConnectTimeout_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+
+        private void tmrConnectTimeout_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             ConnectionState = ConnectionStatus.ConnectFail_Timeout;
             DisconnectByHost();
@@ -288,7 +292,7 @@ namespace IsochronDrafter
         private bool _AutoReconnect = false;
         private readonly int _Port = 0;
         private Encoding _encode = Encoding.Default;
-        readonly object _SyncLock = new object();
+        private readonly object _SyncLock = new object();
         /// <summary>
         /// Syncronizing object for asyncronous operations
         /// </summary>

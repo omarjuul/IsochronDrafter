@@ -6,10 +6,10 @@ namespace IsochronDrafter
 {
     public class DraftClient
     {
-        readonly DraftWindow draftWindow;
-        readonly EventDrivenTCPClient client;
-        readonly string alias;
-        bool draftDone = false;
+        private readonly DraftWindow draftWindow;
+        private readonly EventDrivenTCPClient client;
+        private readonly string alias;
+        private bool draftDone = false;
 
         public DraftClient(DraftWindow draftWindow, string hostname, string alias)
         {
@@ -34,7 +34,7 @@ namespace IsochronDrafter
             client.Connect();
         }
 
-        void client_ConnectionStatusChanged(EventDrivenTCPClient sender, EventDrivenTCPClient.ConnectionStatus status)
+        private void client_ConnectionStatusChanged(EventDrivenTCPClient sender, EventDrivenTCPClient.ConnectionStatus status)
         {
             if (status == EventDrivenTCPClient.ConnectionStatus.Connecting)
                 draftWindow.PrintLine("Connecting...");
@@ -52,7 +52,8 @@ namespace IsochronDrafter
                 }
             }
         }
-        void client_DataReceived(EventDrivenTCPClient sender, object data)
+
+        private void client_DataReceived(EventDrivenTCPClient sender, object data)
         {
             string msgs = data as string;
             foreach (string msg in msgs.Split(';'))
