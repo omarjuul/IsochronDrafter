@@ -26,8 +26,7 @@ namespace IsochronDrafter
             this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             InitializeComponent();
             MaximizeBox = false;
-            cardWindow = new CardWindow();
-            cardWindow.Visible = false;
+            cardWindow = new CardWindow { Visible = false };
             draftPicker.cardWindow = cardWindow;
             deckBuilder.draftWindow = this;
             deckBuilder.cardWindow = cardWindow;

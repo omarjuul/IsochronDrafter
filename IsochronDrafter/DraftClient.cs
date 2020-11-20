@@ -26,8 +26,8 @@ namespace IsochronDrafter
                 }
                 address = hostEntry.AddressList[0];
             }
-            client = new EventDrivenTCPClient(address, 10024, false);
-            client.DataEncoding = Encoding.UTF8;
+
+            client = new EventDrivenTCPClient(address, Util.PORT, false) { DataEncoding = Encoding.UTF8 };
             client.ConnectionStatusChanged += new EventDrivenTCPClient.delConnectionStatusChanged(client_ConnectionStatusChanged);
             client.DataReceived += new EventDrivenTCPClient.delDataReceived(client_DataReceived);
 
