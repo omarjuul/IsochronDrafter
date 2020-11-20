@@ -15,8 +15,8 @@ namespace IsochronDrafter
             MaximizeBox = false;
             tbFile.Text = isochron.Default.SetFile;
             tbPacks.Text = isochron.Default.Packs;
-            tbLands.Text = isochron.Default.CommonsPerPack;
-            tbNonLands.Text = isochron.Default.UncommonPerPack;
+            tbLands.Text = isochron.Default.LandsPerPack;
+            tbNonLands.Text = isochron.Default.NonLandsPerPack;
         }
 
         public void PrintLine(string text)
@@ -64,7 +64,7 @@ namespace IsochronDrafter
                 MessageBox.Show("You must enter a nonnegative integer number of lands.");
                 return;
             }
-            if (!int.TryParse(tbLands.Text, out var nonLands) || nonLands < 1)
+            if (!int.TryParse(tbNonLands.Text, out var nonLands) || nonLands < 1)
             {
                 MessageBox.Show("You must enter a positive integer number of lands.");
                 return;

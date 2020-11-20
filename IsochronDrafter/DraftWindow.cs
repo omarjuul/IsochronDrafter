@@ -35,16 +35,18 @@ namespace IsochronDrafter
 
         private static Dictionary<string, string> ReadCardUrls()
         {
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
             const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
             var tempDict = new Dictionary<string, string>();
-            var bulkUrl = GetJson(bulkEndpoint).download_uri;
+            string bulkUrl = GetJson(bulkEndpoint).download_uri;
             var cardsJson = GetJson(bulkUrl);
 
             var cards =
                 from card in cardsJson as JArray
+                where card?["image_uris"] != null
                 select new { name = (string)card["name"], url = (string)card["image_uris"]["border_crop"] };
 
-            return cards.ToDictionary(x => x.name, x => x.url);
+            return cards.GroupBy(x => x.name).Select(g => g.First()).ToDictionary(x => x.name, x => x.url);
         }
 
         private void DraftWindow_Load(object sender, EventArgs e)
@@ -100,7 +102,13 @@ namespace IsochronDrafter
 
         private static string GetImageUrl(string cardName)
         {
-            return cardUrls[cardName.Replace(",", "").Replace("’", "")];
+            if (!cardUrls.ContainsKey(cardName))
+            {
+                MessageBox.Show($"ERROR: Could not find image url for card {cardName}.");
+                return string.Empty;
+            }
+
+            return cardUrls[cardName];
         }
 
         public void PrintLine(string text)
@@ -320,7 +328,7 @@ namespace IsochronDrafter
             }
             catch (WebException ex)
             {
-                MessageBox.Show("Error while downloading asset.");
+                MessageBox.Show($"Error while downloading asset: {ex.Message}");
                 return null;
             }
 

@@ -290,23 +290,17 @@ namespace IsochronDrafter
         }
         private List<string> GenerateBooster()
         {
-            List<string> booster = new List<string>();
-
             // Add lands.
             int[] landIndexes = Util.PickN(lands.Count, numLandsInPack);
+            List<string> booster = landIndexes.Select(i => lands[i]).ToList();
             foreach (int i in landIndexes)
-            {
-                booster.Add(lands[i]);
                 lands.RemoveAt(i);
-            }
 
             // Add nonlands.
             int[] commonIndexes = Util.PickN(nonLands.Count, numNonLandsInPack);
+            booster.AddRange(commonIndexes.Select(i => nonLands[i]));
             foreach (int i in commonIndexes)
-            {
-                booster.Add(nonLands[i]);
                 nonLands.RemoveAt(i);
-            }
 
             return booster;
         }
