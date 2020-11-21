@@ -1,19 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace IsochronDrafter
 {
     public partial class DraftWindow : Form
     {
-        private static readonly Dictionary<string, string> cardUrls = ReadCardUrls();
         private static readonly Dictionary<string, Image> cardImages = new Dictionary<string, Image>();
         private static readonly Image blankCard = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("IsochronDrafter.blank.jpg"));
         public CardWindow cardWindow;
@@ -30,21 +25,6 @@ namespace IsochronDrafter
             draftPicker.cardWindow = cardWindow;
             deckBuilder.draftWindow = this;
             deckBuilder.cardWindow = cardWindow;
-        }
-
-        private static Dictionary<string, string> ReadCardUrls()
-        {
-            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
-            const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
-            string bulkUrl = GetJson(bulkEndpoint).download_uri;
-            var cardsJson = GetJson(bulkUrl);
-
-            var cards =
-                from card in cardsJson as JArray
-                where card?["image_uris"] != null
-                select new { name = (string)card["name"], url = (string)card["image_uris"]["border_crop"] };
-
-            return cards.GroupBy(x => x.name).Select(g => g.First()).ToDictionary(x => x.name, x => x.url);
         }
 
         private void DraftWindow_Load(object sender, EventArgs e)
@@ -81,8 +61,7 @@ namespace IsochronDrafter
             if (cardImages.ContainsKey(cardName))
                 return;
 
-            var url = GetImageUrl(cardName);
-            var httpWebRequest = WebRequest.Create(url);
+            var httpWebRequest = WebRequest.Create(cardName);
             WebResponse httpWebReponse;
             try
             {
@@ -96,17 +75,6 @@ namespace IsochronDrafter
             }
             var stream = httpWebReponse.GetResponseStream();
             cardImages.Add(cardName, Image.FromStream(stream));
-        }
-
-        private static string GetImageUrl(string cardName)
-        {
-            if (!cardUrls.ContainsKey(cardName))
-            {
-                MessageBox.Show($"ERROR: Could not find image url for card {cardName}.");
-                return string.Empty;
-            }
-
-            return cardUrls[cardName];
         }
 
         public void PrintLine(string text)
@@ -314,29 +282,6 @@ namespace IsochronDrafter
             toolStripMenuItem8.Checked = false;
             toolStripMenuItem9.Checked = false;
             toolStripMenuItem10.Checked = false;
-        }
-
-        private static dynamic GetJson(string url)
-        {
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            WebResponse httpWebReponse;
-            try
-            {
-                httpWebReponse = httpWebRequest.GetResponse();
-            }
-            catch (WebException ex)
-            {
-                MessageBox.Show($"Error while downloading asset: {ex.Message}");
-                return null;
-            }
-
-            string response;
-            using (var reader = new StreamReader(httpWebReponse.GetResponseStream()))
-            {
-                response = reader.ReadToEnd();
-            }
-
-            return JsonConvert.DeserializeObject(response);
         }
     }
 }

@@ -5,7 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Forms;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using tcpServer;
 
 namespace IsochronDrafter
@@ -17,6 +21,8 @@ namespace IsochronDrafter
 
         private readonly List<string> lands = new List<string>();
         private readonly List<string> nonLands = new List<string>();
+        private readonly CardInfo[] cards;
+        private readonly Dictionary<string, string> cardImgUrls;
         private readonly int packs, numLandsInPack, numNonLandsInPack;
         private string cubeName;
         private bool draftStarted = false;
@@ -39,7 +45,11 @@ namespace IsochronDrafter
             server.OnDisconnect += OnDisconnect;
             server.OnDataAvailable += OnDataAvailable;
             server.Open();
+
+            serverWindow.PrintLine("Fetching card information, this might take a while...");
+            cardImgUrls = ReadCardUrls();
         }
+
         private void ParseText(string txt)
         {
             string[] cardStrings = txt.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
@@ -187,11 +197,9 @@ namespace IsochronDrafter
                 // Remove pick from pack and add to card pool.
                 int draftIndex = FindIndexOfDraftState(aliases[connection]);
                 DraftState draftState = draftStates[draftIndex];
-                DraftState nextDraftState;
-                if (packNumber % 2 == 1)
-                    nextDraftState = draftStates[(draftIndex + 1) % draftStates.Length];
-                else
-                    nextDraftState = draftStates[(draftIndex + draftStates.Length - 1) % draftStates.Length];
+                var nextDraftState = packNumber % 2 == 1
+                    ? draftStates[(draftIndex + 1) % draftStates.Length]
+                    : draftStates[(draftIndex + draftStates.Length - 1) % draftStates.Length];
                 int pickIndex = int.Parse(parts[1]);
                 List<string> booster = draftState.boosters[0];
                 string pick = booster[pickIndex];
@@ -212,11 +220,8 @@ namespace IsochronDrafter
                 else
                 {
                     // Check if no one has any boosters.
-                    bool packOver = true;
-                    foreach (DraftState draftStateToCheck in draftStates)
-                        if (draftStateToCheck.boosters.Count > 0)
-                            packOver = false;
-                    if (packOver)
+                    bool atLeastOnePackLeft = draftStates.Any(s => s.boosters.Any());
+                    if (!atLeastOnePackLeft)
                     {
                         StartNextPack();
                         return;
@@ -330,6 +335,48 @@ namespace IsochronDrafter
             serverWindow.PrintLine("There are now " + aliases.Count + " users in the lobby.");
             serverWindow.DraftButtonEnabled(aliases.Count > 0);
             TrySendMessage("USER_LIST|" + string.Join("|", aliases.Values));
+        }
+
+        private Dictionary<string, string> ReadCardUrls()
+        {
+            var cardsInCube = new HashSet<string>(lands.Concat(nonLands));
+
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
+            const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
+            string bulkUrl = GetJson(bulkEndpoint).download_uri;
+            var cardsJson = GetJson(bulkUrl);
+
+            var cards =
+                from card in cardsJson as JArray
+                let name = (string)card["name"]
+                where card?["image_uris"] != null && cardsInCube.Contains(name)
+                select new { name, url = (string)card["image_uris"]["border_crop"] };
+
+            // group to filter out tokens (their names are not unique)
+            return cards.GroupBy(x => x.name).Select(g => g.First()).ToDictionary(x => x.name, x => x.url);
+        }
+
+        private static dynamic GetJson(string url)
+        {
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            WebResponse httpWebReponse;
+            try
+            {
+                httpWebReponse = httpWebRequest.GetResponse();
+            }
+            catch (WebException ex)
+            {
+                MessageBox.Show($"Error while downloading asset: {ex.Message}");
+                return null;
+            }
+
+            string response;
+            using (var reader = new StreamReader(httpWebReponse.GetResponseStream()))
+            {
+                response = reader.ReadToEnd();
+            }
+
+            return JsonConvert.DeserializeObject(response);
         }
     }
 }

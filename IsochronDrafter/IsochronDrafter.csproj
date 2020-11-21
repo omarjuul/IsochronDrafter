@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CardInfo.cs" />
     <Compile Include="DeckBuilder.cs">
       <SubType>Component</SubType>
     </Compile>
