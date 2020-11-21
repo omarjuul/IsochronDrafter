@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using System.Text;
 using System.Windows.Forms;
 
@@ -127,10 +128,10 @@ namespace IsochronDrafter
             else if (parts[0] == "CARD_POOL")
             {
                 draftWindow.PrintLine("Loading draft in progress...");
-                for (int i = 1; i < parts.Length; i++)
+                var cards = parts.Skip(1).Select(CardInfo.FromString).ToArray();
+                DraftWindow.LoadImages(cards);
+                foreach (var card in cards)
                 {
-                    var card = CardInfo.FromString(parts[i]);
-                    DraftWindow.LoadImage(card);
                     draftWindow.AddCardToPool(card.Name);
                 }
                 draftWindow.PrintLine("Loaded draft.");

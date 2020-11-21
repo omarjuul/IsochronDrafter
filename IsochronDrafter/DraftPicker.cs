@@ -24,8 +24,7 @@ namespace IsochronDrafter
         public void Populate(List<CardInfo> cards)
         {
             cardNames = cards.Select(c => c.Name).ToList();
-            foreach (var card in cards)
-                DraftWindow.LoadImage(card);
+            DraftWindow.LoadImages(cards);
             Invalidate();
         }
         public void Clear()

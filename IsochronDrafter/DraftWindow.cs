@@ -1,16 +1,16 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace IsochronDrafter
 {
     public partial class DraftWindow : Form
     {
-        private static readonly Dictionary<string, Image> cardImages = new Dictionary<string, Image>();
+        private static readonly ConcurrentDictionary<string, Image> cardImages = new ConcurrentDictionary<string, Image>();
         private static readonly Image blankCard = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("IsochronDrafter.blank.jpg"));
         private DraftClient draftClient;
         private bool canPick = true, chatBlank = true;
@@ -51,32 +51,42 @@ namespace IsochronDrafter
 
         public static Image GetImage(string cardName)
         {
-            if (cardImages.ContainsKey(cardName))
-                return cardImages[cardName];
+            if (cardImages.TryGetValue(cardName, out var image))
+                return image;
 
             MessageBox.Show($"Image for card {cardName} was not cached!.");
             return blankCard;
         }
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public static void LoadImage(CardInfo card)
+
+        public static void LoadImages(IEnumerable<CardInfo> cards)
         {
-            if (cardImages.ContainsKey(card.Name))
+            var unloaded = cards.Where(c => !cardImages.ContainsKey(c.Name)).ToArray();
+            if (!unloaded.Any())
                 return;
 
-            var httpWebRequest = WebRequest.Create(card.ImgUrl);
-            WebResponse httpWebReponse;
-            try
+            var images = unloaded.AsParallel()
+                .Select(card =>
+                {
+                    var httpWebRequest = WebRequest.Create(card.ImgUrl);
+                    WebResponse httpWebReponse;
+                    try
+                    {
+                        httpWebReponse = httpWebRequest.GetResponse();
+                    }
+                    catch (WebException ex)
+                    {
+                        MessageBox.Show($"Couldn't find image for card {card.Name} at URL {httpWebRequest.RequestUri}.");
+                        return Tuple.Create(card, blankCard);
+                    }
+                    var stream = httpWebReponse.GetResponseStream();
+                    return Tuple.Create(card, Image.FromStream(stream));
+                })
+                .ToList();
+
+            foreach (var tuple in images)
             {
-                httpWebReponse = httpWebRequest.GetResponse();
+                cardImages.TryAdd(tuple.Item1.Name, tuple.Item2);
             }
-            catch (WebException ex)
-            {
-                MessageBox.Show($"Couldn't find image for card {card.Name} at URL {httpWebRequest.RequestUri}.");
-                cardImages.Add(card.Name, blankCard);
-                return;
-            }
-            var stream = httpWebReponse.GetResponseStream();
-            cardImages.Add(card.Name, Image.FromStream(stream));
         }
 
         public void PrintLine(string text)
