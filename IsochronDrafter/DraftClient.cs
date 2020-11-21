@@ -9,7 +9,7 @@ namespace IsochronDrafter
         private readonly DraftWindow draftWindow;
         private readonly EventDrivenTCPClient client;
         private readonly string alias;
-        private bool draftDone = false;
+        private bool draftDone;
 
         public DraftClient(DraftWindow draftWindow, string hostname, string alias)
         {
@@ -28,8 +28,8 @@ namespace IsochronDrafter
             }
 
             client = new EventDrivenTCPClient(address, Util.PORT, false) { DataEncoding = Encoding.UTF8 };
-            client.ConnectionStatusChanged += new EventDrivenTCPClient.delConnectionStatusChanged(client_ConnectionStatusChanged);
-            client.DataReceived += new EventDrivenTCPClient.delDataReceived(client_DataReceived);
+            client.ConnectionStatusChanged += client_ConnectionStatusChanged;
+            client.DataReceived += client_DataReceived;
 
             client.Connect();
         }
@@ -40,7 +40,7 @@ namespace IsochronDrafter
                 draftWindow.PrintLine("Connecting...");
             else if (status == EventDrivenTCPClient.ConnectionStatus.DisconnectedByHost || status == EventDrivenTCPClient.ConnectionStatus.DisconnectedByUser)
             {
-                draftWindow.PrintLine("Connection failed: " + status.ToString());
+                draftWindow.PrintLine($"Connection failed: {status}");
                 if (!draftDone)
                 {
                     draftWindow.Invoke(new MethodInvoker(delegate
@@ -55,8 +55,8 @@ namespace IsochronDrafter
 
         private void client_DataReceived(EventDrivenTCPClient sender, object data)
         {
-            string msgs = data as string;
-            foreach (string msg in msgs.Split(';'))
+            var msgs = (string)data;
+            foreach (var msg in msgs.Split(';'))
                 if (msg.Length > 0)
                     HandleMessage(msg);
 

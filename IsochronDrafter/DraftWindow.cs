@@ -12,7 +12,6 @@ namespace IsochronDrafter
     {
         private static readonly Dictionary<string, Image> cardImages = new Dictionary<string, Image>();
         private static readonly Image blankCard = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("IsochronDrafter.blank.jpg"));
-        private CardWindow cardWindow;
         private DraftClient draftClient;
         private bool canPick = true, chatBlank = true;
         private string packCounts = "", statusText = "", cardCounts = "";
@@ -22,7 +21,7 @@ namespace IsochronDrafter
             Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             InitializeComponent();
             MaximizeBox = false;
-            cardWindow = new CardWindow { Visible = false };
+            var cardWindow = new CardWindow { Visible = false };
             draftPicker.cardWindow = cardWindow;
             deckBuilder.draftWindow = this;
             deckBuilder.cardWindow = cardWindow;
