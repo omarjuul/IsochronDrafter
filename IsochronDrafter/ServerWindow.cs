@@ -71,7 +71,6 @@ namespace IsochronDrafter
             }
 
             server = new DraftServer(this, tbFile.Text, packs, lands, nonLands);
-            if (server.IsValidSet())
             {
                 isochron.Default.SetFile = tbFile.Text;
                 isochron.Default.Packs = tbPacks.Text;
@@ -86,13 +85,11 @@ namespace IsochronDrafter
                 tbPacks.Enabled = false;
                 server.PrintServerStartMessage();
             }
-            else
-                server.server.Close();
         }
 
         private void button2_Click(object sender, EventArgs e)
         {
-            PrintLine("Starting draft with " + server.aliases.Count + " players.");
+            PrintLine("Starting draft with " + server.PlayerCount + " players.");
             server.StartNextPack();
             button2.Enabled = false;
         }

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json;
@@ -17,17 +16,17 @@ namespace IsochronDrafter
     public class DraftServer
     {
         private readonly ServerWindow serverWindow;
-        public TcpServer server;
+        private readonly TcpServer server;
 
         private readonly List<int> landsInPool = new List<int>();
         private readonly List<int> nonLandsInPool = new List<int>();
         private readonly CardInfo[] cards;
         private readonly int packs, numLandsInPack, numNonLandsInPack;
         private string cubeName;
-        private bool draftStarted = false;
-        private int packNumber = 0;
+        private bool draftStarted;
+        private int packNumber;
 
-        public readonly ConcurrentDictionary<TcpServerConnection, string> aliases = new ConcurrentDictionary<TcpServerConnection, string>();
+        private readonly ConcurrentDictionary<TcpServerConnection, string> aliases = new ConcurrentDictionary<TcpServerConnection, string>();
         private DraftState[] draftStates;
 
         public DraftServer(ServerWindow serverWindow, string filename, int packs, int numLandsInPack, int numNonLandsInPack)
@@ -48,6 +47,8 @@ namespace IsochronDrafter
             serverWindow.PrintLine("Fetching card information, this might take a while...");
             cards = ReadCardInfo(landsThenNonlands);
         }
+
+        public int PlayerCount => aliases.Count;
 
         private Tuple<List<string>, List<string>> ReadCardPool(string txt)
         {
@@ -72,25 +73,28 @@ namespace IsochronDrafter
 
             return Tuple.Create(lands, nonLands);
         }
-        public bool IsValidSet()
-        {
-            return true;
-        }
         public void PrintServerStartMessage()
         {
             // Get public IP address of server.
             serverWindow.PrintLine("Looking up public IP...");
-            string url = "http://checkip.dyndns.org";
-            WebRequest req = WebRequest.Create(url);
-            WebResponse resp = req.GetResponse();
-            StreamReader sr = new StreamReader(resp.GetResponseStream());
-            string response = sr.ReadToEnd().Trim();
-            string[] a = response.Split(':');
-            string a2 = a[1].Substring(1);
-            string[] a3 = a2.Split('<');
-            string ip = a3[0];
-
+            var ip = GetPublicIp();
             serverWindow.PrintLine("Launched server at " + ip + " on port " + server.Port + ". Accepting connections.");
+        }
+
+        private static string GetPublicIp()
+        {
+            const string url = "http://checkip.dyndns.org";
+            var req = WebRequest.Create(url);
+            var resp = req.GetResponse();
+            var sr = new StreamReader(resp.GetResponseStream());
+            var response = sr.ReadToEnd();
+            {
+                // returns HTML with something like '...Address: 000.00.0.000</body>...'
+                var a = response.Split(':');
+                var a2 = a[1].Substring(1);
+                var a3 = a2.Split('<');
+                return a3[0];
+            }
         }
 
         private void OnConnect(TcpServerConnection connection)
@@ -257,7 +261,7 @@ namespace IsochronDrafter
         {
             if (aliases.ContainsKey(connection))
                 return aliases[connection];
-            return (connection.Socket.Client.RemoteEndPoint as IPEndPoint).ToString();
+            return (connection.Socket.Client.RemoteEndPoint as IPEndPoint)?.ToString() ?? "<unknown>";
         }
         private void SendPackCounts()
         {
