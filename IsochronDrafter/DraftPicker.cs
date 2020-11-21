@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace IsochronDrafter
 {
     public partial class DraftPicker : UserControl
     {
-        private static readonly float SPACING_PERCENTAGE = .05f;
-        private static readonly int CARD_WIDTH = 375;
-        private static readonly int CARD_HEIGHT = 523;
+        private const float SPACING_PERCENTAGE = .05f;
+        private const int CARD_WIDTH = 480;
+        private const int CARD_HEIGHT = 680;
         public List<string> cardNames = new List<string>();
         public CardWindow cardWindow;
         private float scale, spacing;
@@ -48,7 +47,7 @@ namespace IsochronDrafter
             {
                 int rows = (int)Math.Floor(usableWidth / (CARD_WIDTH * currentTestScale));
                 int cols = (int)Math.Floor(usableHeight / (CARD_HEIGHT * currentTestScale));
-                if (rows * cols < cardNames.Count())
+                if (rows * cols < cardNames.Count)
                     currentTestScale = (currentMaxScale + currentTestScale) / 2;
                 else
                 {
