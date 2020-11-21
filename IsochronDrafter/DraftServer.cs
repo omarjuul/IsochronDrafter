@@ -73,6 +73,7 @@ namespace IsochronDrafter
 
             return Tuple.Create(lands, nonLands);
         }
+
         public void PrintServerStartMessage()
         {
             // Get public IP address of server.
@@ -83,17 +84,17 @@ namespace IsochronDrafter
 
         private static string GetPublicIp()
         {
-            const string url = "http://checkip.dyndns.org";
-            var req = WebRequest.Create(url);
-            var resp = req.GetResponse();
-            var sr = new StreamReader(resp.GetResponseStream());
-            var response = sr.ReadToEnd();
+            try
             {
-                // returns HTML with something like '...Address: 000.00.0.000</body>...'
-                var a = response.Split(':');
-                var a2 = a[1].Substring(1);
-                var a3 = a2.Split('<');
-                return a3[0];
+                return new WebClient().DownloadString("https://bot.whatismyipaddress.com/").Trim();
+            }
+            catch
+            {
+                try
+                {
+                    return new WebClient().DownloadString("https://icanhazip.com").Trim();
+                }
+                catch { return "<unknown>"; }
             }
         }
 
@@ -305,13 +306,13 @@ namespace IsochronDrafter
             // Add lands.
             var landIndexes = Util.PickN(landsInPool.Count, numLandsInPack);
             var booster = landIndexes.Select(i => landsInPool[i]).ToList();
-            foreach (int i in landIndexes)
+            foreach (int i in landIndexes.OrderByDescending(i => i))
                 landsInPool.RemoveAt(i);
 
             // Add nonlands.
             int[] commonIndexes = Util.PickN(nonLandsInPool.Count, numNonLandsInPack);
             booster.AddRange(commonIndexes.Select(i => nonLandsInPool[i]));
-            foreach (int i in commonIndexes)
+            foreach (int i in commonIndexes.OrderByDescending(i => i))
                 nonLandsInPool.RemoveAt(i);
 
             return booster.Select(idx => cards[idx]).ToList();
