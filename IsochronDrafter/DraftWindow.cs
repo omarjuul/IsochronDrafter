@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
@@ -51,17 +52,19 @@ namespace IsochronDrafter
 
         public static Image GetImage(string cardName)
         {
-            if (!cardImages.ContainsKey(cardName))
-                LoadImage(cardName);
-            return cardImages[cardName];
+            if (cardImages.ContainsKey(cardName))
+                return cardImages[cardName];
+
+            MessageBox.Show($"Image for card {cardName} was not cached!.");
+            return blankCard;
         }
         [MethodImpl(MethodImplOptions.Synchronized)]
-        public static void LoadImage(string cardName)
+        public static void LoadImage(CardInfo card)
         {
-            if (cardImages.ContainsKey(cardName))
+            if (cardImages.ContainsKey(card.Name))
                 return;
 
-            var httpWebRequest = WebRequest.Create(cardName);
+            var httpWebRequest = WebRequest.Create(card.ImgUrl);
             WebResponse httpWebReponse;
             try
             {
@@ -69,12 +72,12 @@ namespace IsochronDrafter
             }
             catch (WebException ex)
             {
-                MessageBox.Show($"Couldn't find image for card {cardName} at URL {httpWebRequest.RequestUri}.");
-                cardImages.Add(cardName, blankCard);
+                MessageBox.Show($"Couldn't find image for card {card.Name} at URL {httpWebRequest.RequestUri}.");
+                cardImages.Add(card.Name, blankCard);
                 return;
             }
             var stream = httpWebReponse.GetResponseStream();
-            cardImages.Add(cardName, Image.FromStream(stream));
+            cardImages.Add(card.Name, Image.FromStream(stream));
         }
 
         public void PrintLine(string text)
@@ -116,8 +119,7 @@ namespace IsochronDrafter
         }
         public void PopulateDraftPicker(string message)
         {
-            List<string> booster = new List<string>(message.Split('|'));
-            booster.RemoveAt(0);
+            var booster = message.Split('|').Skip(1).Select(CardInfo.FromString).ToList();
             PrintLine("Received booster with " + booster.Count + (booster.Count == 1 ? " card." : " cards."));
             draftPicker.Populate(booster);
             Invoke(new MethodInvoker(delegate

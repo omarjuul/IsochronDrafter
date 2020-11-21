@@ -1,26 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace IsochronDrafter
 {
     public class DraftState
     {
-        public string alias;
-        public List<string> cardPool;
-        public List<List<string>> boosters;
+        public string Alias { get; }
+        public List<CardInfo> CardPool { get; }
+        public Queue<List<CardInfo>> Boosters { get; }
 
         public DraftState(string alias)
         {
-            this.alias = alias;
-            cardPool = new List<string>();
-            boosters = new List<List<string>>();
+            Alias = alias;
+            CardPool = new List<CardInfo>();
+            Boosters = new Queue<List<CardInfo>>();
         }
 
-        public void AddBooster(List<string> booster)
+        public void AddBooster(List<CardInfo> booster)
         {
-            boosters.Add(booster);
+            Boosters.Enqueue(booster);
+        }
+
+        public List<CardInfo> MakePick(int pickIndex)
+        {
+            var booster = Boosters.Dequeue();
+            CardPool.Add(booster[pickIndex]);
+            booster.RemoveAt(pickIndex);
+            return booster;
         }
     }
 }

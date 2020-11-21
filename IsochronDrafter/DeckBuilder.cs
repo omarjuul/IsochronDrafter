@@ -41,18 +41,19 @@ namespace IsochronDrafter
             }
 
             // Make indicator.
-            indicator = new PictureBox();
-            indicator.BackColor = INDICATOR_COLOR;
+            indicator = new PictureBox { BackColor = INDICATOR_COLOR };
             Controls.Add(indicator);
             indicator.Hide();
         }
 
         public void AddCard(string cardName)
         {
-            DeckBuilderCard card = new DeckBuilderCard();
-            card.SizeMode = PictureBoxSizeMode.Zoom;
-            card.Image = DraftWindow.GetImage(cardName);
-            card.cardName = cardName;
+            var card = new DeckBuilderCard
+            {
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Image = DraftWindow.GetImage(cardName),
+                cardName = cardName
+            };
 
             columns[columns.Count - 1][0].Add(card);
             Controls.Add(card);
