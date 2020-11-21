@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace IsochronDrafter
@@ -20,11 +21,11 @@ namespace IsochronDrafter
             InitializeComponent();
         }
 
-        public void Populate(List<string> cardNames)
+        public void Populate(List<CardInfo> cards)
         {
-            this.cardNames = cardNames;
-            foreach (var cardName in cardNames)
-                DraftWindow.LoadImage(cardName);
+            cardNames = cards.Select(c => c.Name).ToList();
+            foreach (var card in cards)
+                DraftWindow.LoadImage(card);
             Invalidate();
         }
         public void Clear()

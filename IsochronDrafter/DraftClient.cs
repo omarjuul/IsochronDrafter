@@ -128,7 +128,11 @@ namespace IsochronDrafter
             {
                 draftWindow.PrintLine("Loading draft in progress...");
                 for (int i = 1; i < parts.Length; i++)
-                    draftWindow.AddCardToPool(parts[i]);
+                {
+                    var card = CardInfo.FromString(parts[i]);
+                    DraftWindow.LoadImage(card);
+                    draftWindow.AddCardToPool(card.Name);
+                }
                 draftWindow.PrintLine("Loaded draft.");
             }
             else if (parts[0] == "CHAT")

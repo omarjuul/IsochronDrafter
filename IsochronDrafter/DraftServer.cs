@@ -5,7 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Windows.Forms;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using tcpServer;
 
 namespace IsochronDrafter
@@ -15,8 +19,9 @@ namespace IsochronDrafter
         private readonly ServerWindow serverWindow;
         public TcpServer server;
 
-        private readonly List<string> lands = new List<string>();
-        private readonly List<string> nonLands = new List<string>();
+        private readonly List<int> landsInPool = new List<int>();
+        private readonly List<int> nonLandsInPool = new List<int>();
+        private readonly CardInfo[] cards;
         private readonly int packs, numLandsInPack, numNonLandsInPack;
         private string cubeName;
         private bool draftStarted = false;
@@ -28,7 +33,7 @@ namespace IsochronDrafter
         public DraftServer(ServerWindow serverWindow, string filename, int packs, int numLandsInPack, int numNonLandsInPack)
         {
             this.serverWindow = serverWindow;
-            ParseText(File.ReadAllText(filename));
+            var landsThenNonlands = ReadCardPool(File.ReadAllText(filename));
             serverWindow.PrintLine("Loaded cube: " + cubeName + ".");
             this.packs = packs;
             this.numLandsInPack = numLandsInPack;
@@ -39,14 +44,20 @@ namespace IsochronDrafter
             server.OnDisconnect += OnDisconnect;
             server.OnDataAvailable += OnDataAvailable;
             server.Open();
+
+            serverWindow.PrintLine("Fetching card information, this might take a while...");
+            cards = ReadCardInfo(landsThenNonlands);
         }
-        private void ParseText(string txt)
+
+        private Tuple<List<string>, List<string>> ReadCardPool(string txt)
         {
-            string[] cardStrings = txt.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var cardStrings = txt.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             cubeName = cardStrings[0];
+            var lands = new List<string>();
+            var nonLands = new List<string>();
             for (int i = 1; i < cardStrings.Length; i++)
             {
-                string[] cols = cardStrings[i].Split(new[] { "|" }, StringSplitOptions.None);
+                var cols = cardStrings[i].Split(new[] { "|" }, StringSplitOptions.None);
                 var copies = int.Parse(cols[0]);
                 if (cols[2].EndsWith("land", StringComparison.OrdinalIgnoreCase))
                     for (int copy = 0; copy < copies; copy++)
@@ -55,6 +66,11 @@ namespace IsochronDrafter
                     for (int copy = 0; copy < copies; copy++)
                         nonLands.Add(cols[1]);
             }
+
+            landsInPool.AddRange(lands.Select((name, idx) => idx));
+            nonLandsInPool.AddRange(nonLands.Select((name, idx) => idx + lands.Count));
+
+            return Tuple.Create(lands, nonLands);
         }
         public bool IsValidSet()
         {
@@ -170,10 +186,10 @@ namespace IsochronDrafter
                     if (draftStarted)
                     {
                         DraftState draftState = draftStates[FindIndexOfDraftState(parts[1])];
-                        if (draftState.cardPool.Count > 0)
-                            TrySendMessage(connection, "CARD_POOL|" + string.Join("|", draftState.cardPool));
-                        if (draftState.boosters.Count > 0)
-                            TrySendMessage(connection, "BOOSTER|" + string.Join("|", draftState.boosters[0]));
+                        if (draftState.CardPool.Count > 0)
+                            TrySendMessage(connection, "CARD_POOL|" + string.Join("|", draftState.CardPool));
+                        if (draftState.Boosters.Count > 0)
+                            TrySendMessage(connection, "BOOSTER|" + string.Join("|", draftState.Boosters.Peek()));
                         SendPackCounts();
                     }
                     else
@@ -185,38 +201,31 @@ namespace IsochronDrafter
             else if (parts[0] == "PICK")
             {
                 // Remove pick from pack and add to card pool.
-                int draftIndex = FindIndexOfDraftState(aliases[connection]);
-                DraftState draftState = draftStates[draftIndex];
-                DraftState nextDraftState;
-                if (packNumber % 2 == 1)
-                    nextDraftState = draftStates[(draftIndex + 1) % draftStates.Length];
-                else
-                    nextDraftState = draftStates[(draftIndex + draftStates.Length - 1) % draftStates.Length];
-                int pickIndex = int.Parse(parts[1]);
-                List<string> booster = draftState.boosters[0];
-                string pick = booster[pickIndex];
-                draftState.cardPool.Add(pick);
-                booster.RemoveAt(pickIndex);
-                draftState.boosters.Remove(booster);
+                var draftIndex = FindIndexOfDraftState(aliases[connection]);
+                var draftState = draftStates[draftIndex];
+                var nextDraftState = packNumber % 2 == 1
+                    ? draftStates[(draftIndex + 1) % draftStates.Length]
+                    : draftStates[(draftIndex + draftStates.Length - 1) % draftStates.Length];
+                var pickIndex = int.Parse(parts[1]);
+
+                var booster = draftState.MakePick(pickIndex);
+
                 TrySendMessage(connection, "OK|PICK");
-                serverWindow.PrintLine("<" + draftState.alias + "> made a pick.");
+                serverWindow.PrintLine("<" + draftState.Alias + "> made a pick.");
 
                 // Pass the pack to the next player, if not empty.
                 if (booster.Count > 0)
                 {
-                    nextDraftState.boosters.Add(booster);
-                    serverWindow.PrintLine("<" + nextDraftState.alias + "> got a new pack in their queue (now " + nextDraftState.boosters.Count + ").");
-                    if (nextDraftState.boosters.Count == 1 && nextDraftState != draftState)
-                        TrySendMessage(nextDraftState.alias, "BOOSTER|" + string.Join("|", booster));
+                    nextDraftState.AddBooster(booster);
+                    serverWindow.PrintLine("<" + nextDraftState.Alias + "> got a new pack in their queue (now " + nextDraftState.Boosters.Count + ").");
+                    if (nextDraftState.Boosters.Count == 1 && nextDraftState != draftState)
+                        TrySendMessage(nextDraftState.Alias, "BOOSTER|" + string.Join("|", booster));
                 }
                 else
                 {
                     // Check if no one has any boosters.
-                    bool packOver = true;
-                    foreach (DraftState draftStateToCheck in draftStates)
-                        if (draftStateToCheck.boosters.Count > 0)
-                            packOver = false;
-                    if (packOver)
+                    bool atLeastOnePackLeft = draftStates.Any(s => s.Boosters.Any());
+                    if (!atLeastOnePackLeft)
                     {
                         StartNextPack();
                         return;
@@ -224,9 +233,9 @@ namespace IsochronDrafter
                 }
 
                 // Current player gets the next booster in their queue, if any.
-                if (draftState.boosters.Count > 0)
+                if (draftState.Boosters.Count > 0)
                 {
-                    TrySendMessage(connection, "BOOSTER|" + string.Join("|", draftState.boosters[0]));
+                    TrySendMessage(connection, "BOOSTER|" + string.Join("|", draftState.Boosters.Peek()));
                 }
 
                 // Send message with pack count of each player.
@@ -243,6 +252,7 @@ namespace IsochronDrafter
             else
                 serverWindow.PrintLine("<" + GetAlias(connection) + "> Unknown message: " + msg);
         }
+
         private string GetAlias(TcpServerConnection connection)
         {
             if (aliases.ContainsKey(connection))
@@ -253,7 +263,7 @@ namespace IsochronDrafter
         {
             string message = "PACK_COUNT";
             foreach (DraftState draftState in draftStates)
-                message += "|" + draftState.alias + "|" + draftState.boosters.Count;
+                message += "|" + draftState.Alias + "|" + draftState.Boosters.Count;
             TrySendMessage(message);
         }
 
@@ -279,33 +289,33 @@ namespace IsochronDrafter
             }
             foreach (DraftState draftState in draftStates)
             {
-                List<string> booster = GenerateBooster();
+                var booster = GenerateBooster();
                 draftState.AddBooster(booster);
-                TrySendMessage(draftState.alias, "BOOSTER|" + string.Join("|", booster));
+                TrySendMessage(draftState.Alias, "BOOSTER|" + string.Join("|", booster));
             }
             SendPackCounts();
             serverWindow.PrintLine("Passed out pack #" + packNumber + ".");
         }
-        private List<string> GenerateBooster()
+        private List<CardInfo> GenerateBooster()
         {
             // Add lands.
-            int[] landIndexes = Util.PickN(lands.Count, numLandsInPack);
-            List<string> booster = landIndexes.Select(i => lands[i]).ToList();
+            var landIndexes = Util.PickN(landsInPool.Count, numLandsInPack);
+            var booster = landIndexes.Select(i => landsInPool[i]).ToList();
             foreach (int i in landIndexes)
-                lands.RemoveAt(i);
+                landsInPool.RemoveAt(i);
 
             // Add nonlands.
-            int[] commonIndexes = Util.PickN(nonLands.Count, numNonLandsInPack);
-            booster.AddRange(commonIndexes.Select(i => nonLands[i]));
+            int[] commonIndexes = Util.PickN(nonLandsInPool.Count, numNonLandsInPack);
+            booster.AddRange(commonIndexes.Select(i => nonLandsInPool[i]));
             foreach (int i in commonIndexes)
-                nonLands.RemoveAt(i);
+                nonLandsInPool.RemoveAt(i);
 
-            return booster;
+            return booster.Select(idx => cards[idx]).ToList();
         }
         private int FindIndexOfDraftState(string alias)
         {
             for (int i = 0; i < draftStates.Length; i++)
-                if (draftStates[i].alias == alias)
+                if (draftStates[i].Alias == alias)
                     return i;
             return -1;
         }
@@ -330,6 +340,49 @@ namespace IsochronDrafter
             serverWindow.PrintLine("There are now " + aliases.Count + " users in the lobby.");
             serverWindow.DraftButtonEnabled(aliases.Count > 0);
             TrySendMessage("USER_LIST|" + string.Join("|", aliases.Values));
+        }
+
+        private static CardInfo[] ReadCardInfo(Tuple<List<string>, List<string>> landsThenNonlands)
+        {
+            var cardsInCube = new HashSet<string>(landsThenNonlands.Item1.Concat(landsThenNonlands.Item2));
+
+            const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
+            string bulkUrl = GetJson(bulkEndpoint).download_uri;
+            var cardsJson = GetJson(bulkUrl);
+
+            var c =
+                from card in cardsJson as JArray
+                let name = (string)card["name"]
+                where card?["image_uris"] != null && cardsInCube.Contains(name)
+                select new CardInfo(name, (int)card["cmc"], (string)card["image_uris"]["border_crop"]);
+            var infoLookup = c.ToLookup(card => card.Name);
+
+            return landsThenNonlands.Item1.Concat(landsThenNonlands.Item2)
+                .Select(cardName => infoLookup[cardName].FirstOrDefault())
+                .ToArray();
+        }
+
+        private static dynamic GetJson(string url)
+        {
+            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+            WebResponse httpWebReponse;
+            try
+            {
+                httpWebReponse = httpWebRequest.GetResponse();
+            }
+            catch (WebException ex)
+            {
+                MessageBox.Show($"Error while downloading asset: {ex.Message}");
+                return null;
+            }
+
+            string response;
+            using (var reader = new StreamReader(httpWebReponse.GetResponseStream()))
+            {
+                response = reader.ReadToEnd();
+            }
+
+            return JsonConvert.DeserializeObject(response);
         }
     }
 }
