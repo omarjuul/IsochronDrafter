@@ -35,14 +35,8 @@ namespace IsochronDrafter
             var str1 = src.ToCharArray();
             var str2 = dest.ToCharArray();
 
-            for (i = 0; i <= str1.Length; i++)
-            {
-                d[i, 0] = i;
-            }
-            for (j = 0; j <= str2.Length; j++)
-            {
-                d[0, j] = j;
-            }
+            for (i = 0; i <= str1.Length; i++) { d[i, 0] = i; }
+            for (j = 0; j <= str2.Length; j++) { d[0, j] = j; }
             for (i = 1; i <= str1.Length; i++)
             {
                 for (j = 1; j <= str2.Length; j++)

@@ -10,7 +10,7 @@ namespace IsochronDrafter
     public class DeckBuilder : Panel
     {
         public static readonly float SPACING_PERCENTAGE = .05f;
-        public static readonly float CARD_HEADER_PERCENTAGE = .11f;
+        public static readonly float CARD_HEADER_PERCENTAGE = .1f;
         public static readonly int CARD_WIDTH = 375;
         public static readonly int CARD_HEIGHT = 523;
         public static readonly int NUM_INITIAL_COLUMNS = 8;
@@ -25,10 +25,9 @@ namespace IsochronDrafter
         private readonly List<List<DeckBuilderCard>[]> columns;
         private DeckBuilderCard draggedCard = null;
         private int[] hoveredColumnRowNum = null;
-        public PictureBox indicator;
+        private readonly PictureBox indicator;
 
         public DeckBuilder()
-            : base()
         {
             AutoScroll = true;
 
@@ -404,7 +403,7 @@ namespace IsochronDrafter
 
     internal class DeckBuilderLayout
     {
-        public float scale, spacing, headerSize, secondRowY;
+        public readonly float scale, spacing, headerSize, secondRowY;
 
         public DeckBuilderLayout(DeckBuilder deckBuilder)
         {
