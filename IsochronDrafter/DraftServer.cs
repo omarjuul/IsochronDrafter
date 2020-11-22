@@ -348,7 +348,7 @@ namespace IsochronDrafter
             TrySendMessage("USER_LIST|" + string.Join("|", aliases.Values));
         }
 
-        private static CardInfo[] ReadCardInfo(List<string> landsThenNonlands)
+        private CardInfo[] ReadCardInfo(List<string> landsThenNonlands)
         {
             const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
             var bulkUrl = JsonConvert.DeserializeAnonymousType(Fetch(bulkEndpoint), new { download_uri = "" }).download_uri;
@@ -365,17 +365,19 @@ namespace IsochronDrafter
                 .ToArray();
         }
 
-        private static ScryfallCard FuzzyLookup(string cardName, ICollection<ScryfallCard> allCards)
+        private ScryfallCard FuzzyLookup(string cardName, ICollection<ScryfallCard> allCards)
         {
-            const int maxDistance = 3;
+            const int maxDistance = 4;
             var bestMatch =
                 (from candidate in allCards
-                 where Math.Abs(candidate.Name.Length - cardName.Length) < maxDistance // for speed
+                 where Math.Abs(candidate.Name.Length - cardName.Length) <= maxDistance // for speed
                  let levenshteinDistance = Util.LevenshteinDistance(cardName, candidate.Name)
-                 where levenshteinDistance < maxDistance
+                 where levenshteinDistance <= maxDistance
                  orderby levenshteinDistance
                  select new { candidate, levenshteinDistance })
                 .First();
+
+            serverWindow.PrintLine($"Card {cardName} not found, matched as {bestMatch.candidate.Name}.");
 
             return bestMatch.candidate;
         }
