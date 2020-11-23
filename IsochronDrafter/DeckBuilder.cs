@@ -124,8 +124,8 @@ namespace IsochronDrafter
             base.OnMouseDown(e);
             if (e.Button == MouseButtons.Left)
             {
-                var draggedPosition = GetPosFromClickCoor(e.X, e.Y);
-                var card = TryGetCardFromPos(dragged);
+                var draggedPosition = GetPosFromClickCoor(e.X, e.Y, false);
+                var card = TryGetCardFromPos(draggedPosition);
                 if (card == null)
                     return;
                 dragged = draggedPosition;
@@ -134,7 +134,7 @@ namespace IsochronDrafter
             }
             else if (e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right)
             {
-                var card = TryGetCardFromPos(GetPosFromClickCoor(e.X, e.Y));
+                var card = TryGetCardFromPos(GetPosFromClickCoor(e.X, e.Y, false));
                 if (card == null)
                     return;
 
@@ -159,7 +159,7 @@ namespace IsochronDrafter
             base.OnMouseMove(e);
             if (dragged == CardPosition.None)
                 return;
-            var columnRowNum = GetPosFromClickCoor(e.X, e.Y);
+            var columnRowNum = GetPosFromClickCoor(e.X, e.Y, true);
             // Check if the hovered area has changed.
             if (columnRowNum == hovered)
                 return;
@@ -230,7 +230,7 @@ namespace IsochronDrafter
             Invalidate();
         }
 
-        private CardPosition GetPosFromClickCoor(int x, int y)
+        private CardPosition GetPosFromClickCoor(int x, int y, bool isDestination)
         {
             var layout = new DeckBuilderLayout(this);
             if (!layout.TryGetColumn(x, out var column))
@@ -247,14 +247,12 @@ namespace IsochronDrafter
                 if (row == 1)
                     y -= (int)Math.Round(layout.secondRowY);
                 y -= (int)Math.Round(layout.spacing);
+                if (y < 0)
+                    return CardPosition.None;
                 int count = columns[column][row].Count;
-                if (y > (count - 1) * layout.cardHeight * DeckBuilderLayout.CARD_HEADER_PERCENTAGE + layout.cardHeight)
-                    return CardPosition.None;
-                cardNum = (int)Math.Floor(y / (layout.cardHeight * DeckBuilderLayout.CARD_HEADER_PERCENTAGE));
-                if (cardNum < 0)
-                    return CardPosition.None;
-                if (cardNum > count)
-                    cardNum = count;
+                cardNum = (int)Math.Floor(y / layout.headerSize);
+                if (cardNum >= count)
+                    cardNum = isDestination ? count : count - 1;
             }
             return new CardPosition(column, row, cardNum);
         }
