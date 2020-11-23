@@ -9,22 +9,16 @@ namespace IsochronDrafter
 {
     public class DeckBuilder : Panel
     {
-        public static readonly float SPACING_PERCENTAGE = .05f;
-        public static readonly float CARD_HEADER_PERCENTAGE = .1f;
-        public static readonly int CARD_WIDTH = 375;
-        public static readonly int CARD_HEIGHT = 523;
-        public static readonly int NUM_INITIAL_COLUMNS = 8;
-        public static readonly int SIDEBOARD_SPACING_MULTIPLIER = 3;
-        public static readonly int INTER_ROW_SPACING_MULTIPLIER = 3;
-        public static readonly Color INDICATOR_COLOR = Color.Gold;
+        private static readonly int NUM_INITIAL_COLUMNS = 8;
+        private static readonly Color INDICATOR_COLOR = Color.Gold;
         public static readonly Color DRAGGED_STROKE_COLOR = Color.Gold;
         public static readonly int DRAGGED_STROKE_THICKNESS = 5;
 
         public DraftWindow draftWindow;
         public CardWindow cardWindow;
         private readonly List<List<DeckBuilderCard>[]> columns;
-        private DeckBuilderCard draggedCard = null;
-        private int[] hoveredColumnRowNum = null;
+        private CardPosition dragged = CardPosition.None;
+        private CardPosition hovered = CardPosition.None;
         private readonly PictureBox indicator;
 
         public DeckBuilder()
@@ -101,10 +95,7 @@ namespace IsochronDrafter
         }
         private void LayoutControls()
         {
-            if (VerticalScroll.Visible)
-                AutoScrollMargin = new Size(0, SystemInformation.HorizontalScrollBarHeight);
-            else
-                AutoScrollMargin = new Size(0, 0);
+            AutoScrollMargin = new Size(0, VerticalScroll.Visible ? SystemInformation.HorizontalScrollBarHeight : 0);
 
             DeckBuilderLayout layout = new DeckBuilderLayout(this);
 
@@ -114,24 +105,16 @@ namespace IsochronDrafter
                     {
                         // Set location and size.
                         DeckBuilderCard card = columns[column][row][cardNum];
-                        float x = layout.spacing * (column + 1) + (CARD_WIDTH * layout.scale * column);
-                        float y = layout.spacing + (layout.headerSize * cardNum);
-                        if (column == columns.Count - 1)
-                        {
-                            x += layout.spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1);
-                            y += layout.spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1);
-                        }
-                        if (row == 1)
-                            y += layout.secondRowY;
-                        y -= VerticalScroll.Value;
-                        card.Left = (int)Math.Round(x);
-                        card.Top = (int)Math.Round(y);
-                        card.Width = (int)Math.Round(CARD_WIDTH * layout.scale);
-                        card.Height = (int)Math.Round(CARD_HEIGHT * layout.scale);
+                        layout.GetCardLeftAndTop(new CardPosition(column, row, cardNum), out var left, out var top);
+                        card.Left = (int)Math.Round(left);
+                        card.Top = (int)Math.Round(top);
+                        card.Width = (int)Math.Round(layout.cardWidth);
+                        card.Height = (int)Math.Round(layout.cardHeight);
 
                         // Set child index.
                         Controls.SetChildIndex(card, columns[column][row].Count - cardNum);
                     }
+
             indicator.BringToFront();
             SetCardCounts();
         }
@@ -141,16 +124,17 @@ namespace IsochronDrafter
             base.OnMouseDown(e);
             if (e.Button == MouseButtons.Left)
             {
-                DeckBuilderCard card = GetCardFromCoor(e.X, e.Y);
+                var draggedPosition = GetPosFromClickCoor(e.X, e.Y);
+                var card = TryGetCardFromPos(dragged);
                 if (card == null)
                     return;
-                draggedCard = card;
-                draggedCard.selected = true;
-                draggedCard.Invalidate();
+                dragged = draggedPosition;
+                card.selected = true;
+                card.Invalidate();
             }
             else if (e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right)
             {
-                DeckBuilderCard card = GetCardFromCoor(e.X, e.Y);
+                var card = TryGetCardFromPos(GetPosFromClickCoor(e.X, e.Y));
                 if (card == null)
                     return;
 
@@ -164,29 +148,29 @@ namespace IsochronDrafter
                 Focus();
             }
         }
+
+        private DeckBuilderCard TryGetCardFromPos(CardPosition pos)
+        {
+            return pos == CardPosition.None ? null : columns[pos.Col][pos.Row].ElementAtOrDefault(pos.Num);
+        }
+
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (draggedCard == null)
+            if (dragged == CardPosition.None)
                 return;
-            int[] columnRowNum = GetColumnRowNumFromCoor(e.X, e.Y);
+            var columnRowNum = GetPosFromClickCoor(e.X, e.Y);
             // Check if the hovered area has changed.
-            if (columnRowNum == null && hoveredColumnRowNum == null)
-                return;
-            if (columnRowNum != null && hoveredColumnRowNum != null && columnRowNum.SequenceEqual(hoveredColumnRowNum))
+            if (columnRowNum == hovered)
                 return;
             // Toggle visibility of indicator or change position.
-            hoveredColumnRowNum = columnRowNum;
-            if (hoveredColumnRowNum == null)
+            hovered = columnRowNum;
+            if (hovered == CardPosition.None)
                 indicator.Hide();
             else
             {
-                int column = hoveredColumnRowNum[0];
-                int row = hoveredColumnRowNum[1];
-                int cardNum = hoveredColumnRowNum[2];
                 // If the hovered position is immediately before or after the dragged card, don't draw the indicator.
-                int[] draggedColumnRowNum = GetColumnRowNumFromCard(draggedCard);
-                if (column == draggedColumnRowNum[0] && row == draggedColumnRowNum[1] && (cardNum == draggedColumnRowNum[2] || cardNum == draggedColumnRowNum[2] + 1))
+                if (hovered.Col == dragged.Col && hovered.Row == dragged.Row && (hovered.Num == dragged.Num || hovered.Num == dragged.Num + 1))
                 {
                     indicator.Hide();
                 }
@@ -194,23 +178,13 @@ namespace IsochronDrafter
                 else
                 {
                     DeckBuilderLayout layout = new DeckBuilderLayout(this);
-                    // TODO: COPIED FROM LayoutControls()! Bad!
-                    float x = layout.spacing * (column + 1) + (CARD_WIDTH * layout.scale * column);
-                    float y = layout.spacing + (layout.headerSize * cardNum);
-                    if (column == columns.Count - 1)
-                    {
-                        x += layout.spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1);
-                        y += layout.spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1);
-                    }
-                    if (row == 1)
-                        y += layout.secondRowY;
-                    if (cardNum != 0 && cardNum == columns[column][row].Count)
-                        y += CARD_HEIGHT * layout.scale - layout.headerSize;
-                    y -= VerticalScroll.Value;
-                    // END COPY
-                    indicator.Left = (int)Math.Round(x - 2);
-                    indicator.Top = (int)Math.Round(y - 1);
-                    indicator.Width = (int)Math.Round(CARD_WIDTH * layout.scale + 4);
+                    layout.GetCardLeftAndTop(hovered, out var left, out var top);
+                    if (hovered.Num != 0 && hovered.Num == columns[hovered.Col][hovered.Row].Count)
+                        // draw at bottom of last card
+                        top += layout.cardHeight - layout.headerSize;
+                    indicator.Left = (int)Math.Round(left - 2);
+                    indicator.Top = (int)Math.Round(top - 1);
+                    indicator.Width = (int)Math.Round(layout.cardWidth + 4);
                     indicator.Height = 2;
                     indicator.Show();
                 }
@@ -221,97 +195,74 @@ namespace IsochronDrafter
         {
             base.OnMouseUp(e);
             if (e.Button == MouseButtons.Left)
-            {
-                if (draggedCard == null)
-                    return;
-                if (hoveredColumnRowNum != null)
-                {
-                    // Move dragged card in columns.
-                    int[] draggedColumnRowNum = GetColumnRowNumFromCard(draggedCard);
-                    if (draggedColumnRowNum[0] != hoveredColumnRowNum[0] || draggedColumnRowNum[1] != hoveredColumnRowNum[1])
-                    {
-                        columns[draggedColumnRowNum[0]][draggedColumnRowNum[1]].RemoveAt(draggedColumnRowNum[2]);
-                        columns[hoveredColumnRowNum[0]][hoveredColumnRowNum[1]].Insert(hoveredColumnRowNum[2], draggedCard);
-                    }
-                    else
-                    {
-                        if (hoveredColumnRowNum[2] <= draggedColumnRowNum[2])
-                        {
-                            columns[draggedColumnRowNum[0]][draggedColumnRowNum[1]].RemoveAt(draggedColumnRowNum[2]);
-                            columns[draggedColumnRowNum[0]][draggedColumnRowNum[1]].Insert(hoveredColumnRowNum[2], draggedCard);
-                        }
-                        else
-                        {
-                            columns[draggedColumnRowNum[0]][draggedColumnRowNum[1]].Insert(hoveredColumnRowNum[2], draggedCard);
-                            columns[draggedColumnRowNum[0]][draggedColumnRowNum[1]].RemoveAt(draggedColumnRowNum[2]);
-                        }
-                    }
-                }
-                draggedCard.selected = false;
-                draggedCard.Invalidate();
-                draggedCard = null;
-                hoveredColumnRowNum = null;
-                indicator.Hide();
-                Invalidate();
-            }
+                MoveDraggedCardToHover();
             else if (e.Button == MouseButtons.Middle || e.Button == MouseButtons.Right)
                 cardWindow.Hide();
         }
-        private int[] GetColumnRowNumFromCoor(int x, int y)
+
+        private void MoveDraggedCardToHover()
         {
-            DeckBuilderLayout layout = new DeckBuilderLayout(this);
-            if (Math.Floor(x / (layout.scale * CARD_WIDTH + layout.spacing)) > columns.Count - 1)
-                x -= (int)Math.Round(layout.spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1));
-            if (x % (layout.scale * CARD_WIDTH + layout.spacing) < layout.spacing)
-                return null;
-            int column = (int)Math.Floor(x / (layout.scale * CARD_WIDTH + layout.spacing));
-            if (column >= columns.Count)
-                return null;
-            bool isEmpty = GetMaxFirstRowLength() == 0;
+            if (dragged == CardPosition.None)
+                return;
+
+            var draggedCard = TryGetCardFromPos(dragged);
+            if (hovered != CardPosition.None && hovered != dragged)
+            {
+                if (dragged.Col != hovered.Col || dragged.Row != hovered.Row)
+                {
+                    columns[dragged.Col][dragged.Row].RemoveAt(dragged.Num);
+                    columns[hovered.Col][hovered.Row].Insert(hovered.Num, draggedCard);
+                }
+                else
+                {
+                    var cellList = columns[dragged.Col][dragged.Row];
+                    cellList.RemoveAt(dragged.Num);
+                    var insertNum = dragged.Num >= hovered.Num ? hovered.Num : hovered.Num - 1;
+                    cellList.Insert(insertNum, draggedCard);
+                }
+            }
+
+            draggedCard.selected = false;
+            draggedCard.Invalidate();
+            dragged = CardPosition.None;
+            hovered = CardPosition.None;
+            indicator.Hide();
+            Invalidate();
+        }
+
+        private CardPosition GetPosFromClickCoor(int x, int y)
+        {
+            var layout = new DeckBuilderLayout(this);
+            if (!layout.TryGetColumn(x, out var column))
+                return CardPosition.None;
             y += VerticalScroll.Value;
-            int row = y < layout.secondRowY || isEmpty || column == columns.Count - 1 ? 0 : 1;
+            int row = y < layout.secondRowY || column == columns.Count - 1 ? 0 : 1;
             int cardNum;
             if (columns[column][row].Count == 0) // Dragged card should get put as the first element in the now-empty column.
                 cardNum = 0;
             else
             {
                 if (column == columns.Count - 1)
-                    y -= (int)Math.Round(layout.spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1));
+                    y -= (int)Math.Round(layout.spacing * (DeckBuilderLayout.SIDEBOARD_SPACING_MULTIPLIER - 1));
                 if (row == 1)
                     y -= (int)Math.Round(layout.secondRowY);
                 y -= (int)Math.Round(layout.spacing);
                 int count = columns[column][row].Count;
-                if (y > (count - 1) * CARD_HEIGHT * layout.scale * CARD_HEADER_PERCENTAGE + CARD_HEIGHT * layout.scale)
-                    return null;
-                cardNum = (int)Math.Floor(y / (CARD_HEIGHT * layout.scale * CARD_HEADER_PERCENTAGE));
+                if (y > (count - 1) * layout.cardHeight * DeckBuilderLayout.CARD_HEADER_PERCENTAGE + layout.cardHeight)
+                    return CardPosition.None;
+                cardNum = (int)Math.Floor(y / (layout.cardHeight * DeckBuilderLayout.CARD_HEADER_PERCENTAGE));
                 if (cardNum < 0)
-                    return null;
+                    return CardPosition.None;
                 if (cardNum > count)
                     cardNum = count;
             }
-            return new int[] { column, row, cardNum };
+            return new CardPosition(column, row, cardNum);
         }
+
         private DeckBuilderCard GetCardFromCoor(int x, int y)
         {
-            // TODO: This should be done with calculation instead of checking every card, but since there will usually be under 50 children of this control, it's fine for now.
-            for (int column = 0; column < columns.Count; column++)
-                for (int row = 0; row < 2; row++)
-                    for (int cardNum = columns[column][row].Count - 1; cardNum >= 0; cardNum--)
-                    {
-                        DeckBuilderCard card = columns[column][row][cardNum];
-                        if (x >= card.Left && x <= card.Right && y >= card.Top && y <= card.Bottom)
-                            return card;
-                    }
-            return null;
-        }
-        private int[] GetColumnRowNumFromCard(DeckBuilderCard card)
-        {
-            for (int column = 0; column < columns.Count; column++)
-                for (int row = 0; row < 2; row++)
-                    for (int cardNum = 0; cardNum < columns[column][row].Count; cardNum++)
-                        if (columns[column][row][cardNum] == card)
-                            return new int[] { column, row, cardNum };
-            return null;
+            var pos = GetPosFromClickCoor(x, y);
+            return TryGetCardFromPos(pos);
         }
 
         public int ColumnCount()
@@ -320,11 +271,7 @@ namespace IsochronDrafter
         }
         public int GetMaxFirstRowLength()
         {
-            int output = 0;
-            for (int i = 0; i < columns.Count - 1; i++)
-                if (columns[i][0].Count > output)
-                    output = columns[i][0].Count;
-            return output;
+            return columns.Select(c => c[0].Count).Max();
         }
 
         public void SetCardCounts()
@@ -403,17 +350,99 @@ namespace IsochronDrafter
 
     internal class DeckBuilderLayout
     {
-        public readonly float scale, spacing, headerSize, secondRowY;
+        public static readonly float CARD_HEADER_PERCENTAGE = .1f;
+        private static readonly float SPACING_PERCENTAGE = .05f;
+        public static readonly int SIDEBOARD_SPACING_MULTIPLIER = 3;
+        private static readonly int INTER_ROW_SPACING_MULTIPLIER = 3;
+        private static readonly int CARD_WIDTH = 375;
+        private static readonly int CARD_HEIGHT = 523;
+
+        public readonly float scale, spacing, headerSize, secondRowY, cardWidth, cardHeight;
+        private readonly int columnCount, vScrollValue;
 
         public DeckBuilderLayout(DeckBuilder deckBuilder)
         {
-            int columnCount = deckBuilder.ColumnCount();
+            columnCount = deckBuilder.ColumnCount();
+            vScrollValue = deckBuilder.VerticalScroll.Value;
             float usableWidth = deckBuilder.ClientSize.Width;
-            scale = (usableWidth * (1 - DeckBuilder.SPACING_PERCENTAGE) / columnCount) / DeckBuilder.CARD_WIDTH;
-            spacing = (usableWidth * DeckBuilder.SPACING_PERCENTAGE) / (columnCount + 1 + (DeckBuilder.SIDEBOARD_SPACING_MULTIPLIER - 1) * 2);
-            headerSize = DeckBuilder.CARD_HEIGHT * scale * DeckBuilder.CARD_HEADER_PERCENTAGE;
+            scale = usableWidth * (1 - SPACING_PERCENTAGE) / (columnCount * CARD_WIDTH);
+            spacing = (usableWidth * SPACING_PERCENTAGE) / (columnCount + 1 + (SIDEBOARD_SPACING_MULTIPLIER - 1) * 2);
+            headerSize = CARD_HEIGHT * scale * CARD_HEADER_PERCENTAGE;
             int maxFirstRowLength = deckBuilder.GetMaxFirstRowLength();
-            secondRowY = (spacing * DeckBuilder.INTER_ROW_SPACING_MULTIPLIER - 1) + (headerSize * (maxFirstRowLength - 1)) + (DeckBuilder.CARD_HEIGHT * scale);
+            secondRowY = (spacing * INTER_ROW_SPACING_MULTIPLIER - 1) + (headerSize * (maxFirstRowLength - 1)) +
+                         (CARD_HEIGHT * scale);
+
+            cardWidth = CARD_WIDTH * scale;
+            cardHeight = CARD_HEIGHT * scale;
+        }
+
+        public void GetCardLeftAndTop(CardPosition position, out float left, out float top)
+        {
+            left = spacing * (position.Col + 1) + (cardWidth * position.Col);
+            top = spacing + (headerSize * position.Num);
+            if (position.Col == columnCount - 1)
+            {
+                left += spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1);
+                top += spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1);
+            }
+
+            if (position.Row == 1)
+                top += secondRowY;
+            top -= vScrollValue;
+        }
+
+        public bool TryGetColumn(int x, out int col)
+        {
+            if (Math.Floor(x / (cardWidth + spacing)) > columnCount - 1)
+                x -= (int)Math.Round(spacing * (SIDEBOARD_SPACING_MULTIPLIER - 1));
+            if (x % (cardWidth + spacing) < spacing)
+            {
+                col = -1;
+                return false;
+            }
+
+            col = (int)Math.Floor(x / (cardWidth + spacing));
+            return col < columnCount;
+        }
+    }
+
+    public readonly struct CardPosition
+    {
+        public static readonly CardPosition None = new CardPosition(-1, -1, -1);
+        public readonly int Col, Row, Num;
+
+        public CardPosition(int col, int row, int num)
+        {
+            Col = col;
+            Row = row;
+            Num = num;
+        }
+        private bool Equals(CardPosition other)
+        {
+            return Col == other.Col && Row == other.Row && Num == other.Num;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CardPosition other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return Col + 8 * Row + 16 * Num;
+            }
+        }
+
+        public static bool operator ==(CardPosition left, CardPosition right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(CardPosition left, CardPosition right)
+        {
+            return !left.Equals(right);
         }
     }
 }
