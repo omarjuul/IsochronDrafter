@@ -117,4 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="DraftWindow_LoadImage_Couldn_t_find_image" xml:space="preserve">
+    <value>Couldn't find image for card {0} at URL {1}.</value>
+  </data>
 </root>

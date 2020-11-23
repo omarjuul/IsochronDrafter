@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.IO;
-using System.Text.RegularExpressions;
 
 namespace IsochronDrafter
 {
@@ -20,13 +13,10 @@ namespace IsochronDrafter
             this.Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             InitializeComponent();
             MaximizeBox = false;
-            textBox2.Text = isochron.Default.SetFile;
-            textBox3.Text = isochron.Default.ImageDirectory;
-            textBox8.Text = isochron.Default.Packs;
-            textBox4.Text = isochron.Default.CommonsPerPack;
-            textBox5.Text = isochron.Default.UncommonPerPack;
-            textBox6.Text = isochron.Default.RaresPerPack;
-            textBox7.Text = isochron.Default.MythicPercentage;
+            tbFile.Text = isochron.Default.SetFile;
+            tbPacks.Text = isochron.Default.Packs;
+            tbLands.Text = isochron.Default.CommonsPerPack;
+            tbNonLands.Text = isochron.Default.UncommonPerPack;
         }
 
         public void PrintLine(string text)
@@ -34,7 +24,7 @@ namespace IsochronDrafter
             textBox1.Invoke(new MethodInvoker(delegate
             {
                 if (textBox1.Text.Length != 0)
-                    textBox1.Text += "\r\n";
+                    textBox1.Text += Environment.NewLine;
                 textBox1.Text += text;
                 textBox1.SelectionStart = textBox1.Text.Length;
                 textBox1.ScrollToCaret();
@@ -53,72 +43,47 @@ namespace IsochronDrafter
             DialogResult result = openFileDialog1.ShowDialog();
             if (result == System.Windows.Forms.DialogResult.OK)
             {
-                textBox2.Text = openFileDialog1.FileName;
+                tbFile.Text = openFileDialog1.FileName;
             }
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (textBox2.Text.Length == 0)
+            if (tbFile.Text.Length == 0)
             {
                 MessageBox.Show("You must choose a set file.");
                 return;
             }
-            if (textBox3.Text.Length == 0)
-            {
-                MessageBox.Show("You must enter a remote image directory.");
-                return;
-            }
-            int packs, commons, uncommons, rares;
-            float mythicPercentage;
-            if (!int.TryParse(textBox8.Text, out packs) || packs < 0)
+            if (!int.TryParse(tbPacks.Text, out var packs) || packs < 1)
             {
                 MessageBox.Show("You must enter a positive integer number of packs.");
                 return;
             }
-            if (!int.TryParse(textBox4.Text, out commons) || commons < 0)
+            if (!int.TryParse(tbLands.Text, out var lands) || lands < 0)
             {
-                MessageBox.Show("You must enter a positive integer number of commons.");
+                MessageBox.Show("You must enter a nonnegative integer number of lands.");
                 return;
             }
-            if (!int.TryParse(textBox5.Text, out uncommons) || uncommons < 0)
+            if (!int.TryParse(tbLands.Text, out var nonLands) || nonLands < 1)
             {
-                MessageBox.Show("You must enter a positive integer number of uncommons.");
+                MessageBox.Show("You must enter a positive integer number of lands.");
                 return;
             }
-            if (!int.TryParse(textBox6.Text, out rares) || rares < 0)
-            {
-                MessageBox.Show("You must enter a positive integer number of rares.");
-                return;
-            }
-            if (!float.TryParse(textBox7.Text, out mythicPercentage) || mythicPercentage < 0 || mythicPercentage > 1)
-            {
-                MessageBox.Show("You must enter a mythic percentage between 0 and 1.");
-                return;
-            }
-            Util.imageDirectory = textBox3.Text;
-            if (!Util.imageDirectory.EndsWith("/"))
-                Util.imageDirectory += "/";
-            server = new DraftServer(this, textBox2.Text, packs, commons, uncommons, rares, mythicPercentage);
+
+            server = new DraftServer(this, tbFile.Text, packs, lands, nonLands);
             if (server.IsValidSet())
             {
-                isochron.Default.SetFile = textBox2.Text;
-                isochron.Default.ImageDirectory = textBox3.Text;
-                isochron.Default.Packs = textBox8.Text;
-                isochron.Default.CommonsPerPack = textBox4.Text;
-                isochron.Default.UncommonPerPack = textBox5.Text;
-                isochron.Default.RaresPerPack = textBox6.Text;
-                isochron.Default.MythicPercentage = textBox7.Text;
+                isochron.Default.SetFile = tbFile.Text;
+                isochron.Default.Packs = tbPacks.Text;
+                isochron.Default.LandsPerPack = tbLands.Text;
+                isochron.Default.NonLandsPerPack = tbNonLands.Text;
                 isochron.Default.Save();
                 button1.Enabled = false;
                 button3.Enabled = false;
-                textBox2.Enabled = false;
-                textBox3.Enabled = false;
-                textBox4.Enabled = false;
-                textBox5.Enabled = false;
-                textBox6.Enabled = false;
-                textBox7.Enabled = false;
-                textBox8.Enabled = false;
+                tbFile.Enabled = false;
+                tbLands.Enabled = false;
+                tbNonLands.Enabled = false;
+                tbPacks.Enabled = false;
                 server.PrintServerStartMessage();
             }
             else
