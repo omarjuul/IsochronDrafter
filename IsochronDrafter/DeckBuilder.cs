@@ -45,10 +45,12 @@ namespace IsochronDrafter
             {
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Image = DraftWindow.GetImage(cardName),
-                cardName = cardName
+                cardName = cardName,
+                cmc = DraftWindow.GetCmc(cardName)
             };
 
-            columns[columns.Count - 1][0].Add(card);
+            var colNum = Util.Clamp(0, card.cmc, ColumnCount - 2);
+            columns[colNum][0].Add(card);
             Controls.Add(card);
             LayoutControls();
         }
@@ -257,16 +259,8 @@ namespace IsochronDrafter
             return new CardPosition(column, row, cardNum);
         }
 
-        private DeckBuilderCard GetCardFromCoor(int x, int y)
-        {
-            var pos = GetPosFromClickCoor(x, y);
-            return TryGetCardFromPos(pos);
-        }
+        public int ColumnCount => columns.Count;
 
-        public int ColumnCount()
-        {
-            return columns.Count;
-        }
         public int GetMaxFirstRowLength()
         {
             return columns.Select(c => c[0].Count).Max();
@@ -314,6 +308,7 @@ namespace IsochronDrafter
     internal class DeckBuilderCard : PictureBox
     {
         public string cardName;
+        public int cmc;
         public bool selected = false;
 
         protected override void OnPaint(PaintEventArgs paintEventArgs)
@@ -360,7 +355,7 @@ namespace IsochronDrafter
 
         public DeckBuilderLayout(DeckBuilder deckBuilder)
         {
-            columnCount = deckBuilder.ColumnCount();
+            columnCount = deckBuilder.ColumnCount;
             vScrollValue = deckBuilder.VerticalScroll.Value;
             float usableWidth = deckBuilder.ClientSize.Width;
             scale = usableWidth * (1 - SPACING_PERCENTAGE) / (columnCount * CARD_WIDTH);

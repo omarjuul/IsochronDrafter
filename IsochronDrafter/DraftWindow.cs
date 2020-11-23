@@ -11,6 +11,7 @@ namespace IsochronDrafter
     public partial class DraftWindow : Form
     {
         private static readonly ConcurrentDictionary<string, Image> cardImages = new ConcurrentDictionary<string, Image>();
+        private static readonly ConcurrentDictionary<string, CardInfo> cardDict = new ConcurrentDictionary<string, CardInfo>();
         private static readonly Image blankCard = Image.FromStream(System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("IsochronDrafter.blank.jpg"));
         private DraftClient draftClient;
         private bool canPick = true, chatBlank = true;
@@ -54,8 +55,17 @@ namespace IsochronDrafter
             if (cardImages.TryGetValue(cardName, out var image))
                 return image;
 
-            MessageBox.Show($"Image for card {cardName} was not cached!.");
+            MessageBox.Show($"Image for card '{cardName}' was not cached!.");
             return blankCard;
+        }
+
+        public static int GetCmc(string cardName)
+        {
+            if (cardDict.TryGetValue(cardName, out var card))
+                return card.Cmc;
+
+            MessageBox.Show($"Card '{cardName}' was not cached!.");
+            return 0;
         }
 
         public static void LoadImages(IEnumerable<CardInfo> cards)
@@ -63,6 +73,11 @@ namespace IsochronDrafter
             var unloaded = cards.Where(c => !cardImages.ContainsKey(c.Name)).ToArray();
             if (!unloaded.Any())
                 return;
+
+            foreach (var cardInfo in unloaded)
+            {
+                cardDict.TryAdd(cardInfo.Name, cardInfo);
+            }
 
             var images = unloaded.AsParallel()
                 .Select(card =>
