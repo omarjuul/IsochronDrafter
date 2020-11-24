@@ -8,7 +8,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using tcpServer;
 
 namespace IsochronDrafter

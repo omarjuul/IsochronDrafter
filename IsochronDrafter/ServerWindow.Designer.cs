@@ -49,7 +49,7 @@
             this.button1.Location = new System.Drawing.Point(268, 450);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(101, 23);
-            this.button1.TabIndex = 3;
+            this.button1.TabIndex = 1;
             this.button1.Text = "Launch Server";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
@@ -64,7 +64,7 @@
             this.button2.Location = new System.Drawing.Point(375, 450);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(85, 23);
-            this.button2.TabIndex = 4;
+            this.button2.TabIndex = 2;
             this.button2.Text = "Start Draft";
             this.button2.UseVisualStyleBackColor = true;
             this.button2.Click += new System.EventHandler(this.button2_Click);
@@ -77,7 +77,8 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.Size = new System.Drawing.Size(725, 385);
-            this.textBox1.TabIndex = 0;
+            this.textBox1.TabIndex = 1;
+            this.textBox1.TabStop = false;
             // 
             // lbFile
             // 
@@ -93,14 +94,14 @@
             this.tbFile.Location = new System.Drawing.Point(102, 401);
             this.tbFile.Name = "tbFile";
             this.tbFile.Size = new System.Drawing.Size(554, 20);
-            this.tbFile.TabIndex = 0;
+            this.tbFile.TabIndex = 3;
             // 
             // button3
             // 
             this.button3.Location = new System.Drawing.Point(662, 399);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 1;
+            this.button3.TabIndex = 4;
             this.button3.Text = "Browse...";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
@@ -111,7 +112,7 @@
             this.lbLands.Location = new System.Drawing.Point(176, 427);
             this.lbLands.Name = "lbLands";
             this.lbLands.Size = new System.Drawing.Size(86, 13);
-            this.lbLands.TabIndex = 5;
+            this.lbLands.TabIndex = 6;
             this.lbLands.Text = "Lands Per Pack:";
             // 
             // tbLands
@@ -127,7 +128,7 @@
             this.lbNonLands.Location = new System.Drawing.Point(302, 427);
             this.lbNonLands.Name = "lbNonLands";
             this.lbNonLands.Size = new System.Drawing.Size(55, 13);
-            this.lbNonLands.TabIndex = 5;
+            this.lbNonLands.TabIndex = 7;
             this.lbNonLands.Text = "Nonlands:";
             // 
             // tbNonLands
@@ -135,7 +136,7 @@
             this.tbNonLands.Location = new System.Drawing.Point(363, 424);
             this.tbNonLands.Name = "tbNonLands";
             this.tbNonLands.Size = new System.Drawing.Size(31, 20);
-            this.tbNonLands.TabIndex = 6;
+            this.tbNonLands.TabIndex = 7;
             // 
             // lbPacks
             // 
@@ -151,7 +152,7 @@
             this.tbPacks.Location = new System.Drawing.Point(145, 424);
             this.tbPacks.Name = "tbPacks";
             this.tbPacks.Size = new System.Drawing.Size(25, 20);
-            this.tbPacks.TabIndex = 6;
+            this.tbPacks.TabIndex = 5;
             // 
             // ServerWindow
             // 
