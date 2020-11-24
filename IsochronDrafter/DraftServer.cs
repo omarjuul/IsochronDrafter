@@ -305,13 +305,13 @@ namespace IsochronDrafter
             // Add lands.
             var landIndexes = Util.PickN(landsInPool.Count, numLandsInPack);
             var booster = landIndexes.Select(i => landsInPool[i]).ToList();
-            foreach (int i in landIndexes)
+            foreach (int i in landIndexes.OrderByDescending(i => i))
                 landsInPool.RemoveAt(i);
 
             // Add nonlands.
             int[] commonIndexes = Util.PickN(nonLandsInPool.Count, numNonLandsInPack);
             booster.AddRange(commonIndexes.Select(i => nonLandsInPool[i]));
-            foreach (int i in commonIndexes)
+            foreach (int i in commonIndexes.OrderByDescending(i => i))
                 nonLandsInPool.RemoveAt(i);
 
             return booster.Select(idx => cards[idx]).ToList();
