@@ -87,13 +87,13 @@ namespace IsochronDrafter
         {
             try
             {
-                return new WebClient().DownloadString("https://bot.whatismyipaddress.com/").Trim();
+                return Fetch("https://bot.whatismyipaddress.com/");
             }
             catch
             {
                 try
                 {
-                    return new WebClient().DownloadString("https://icanhazip.com").Trim();
+                    return Fetch("https://icanhazip.com");
                 }
                 catch { return "<unknown>"; }
             }
@@ -384,21 +384,14 @@ namespace IsochronDrafter
 
         private static string Fetch(string url)
         {
-            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
-            WebResponse httpWebReponse;
             try
             {
-                httpWebReponse = httpWebRequest.GetResponse();
+                return new WebClient().DownloadString(url).Trim();
             }
             catch (WebException ex)
             {
                 MessageBox.Show($"Error while downloading asset: {ex.Message}");
                 return null;
-            }
-
-            using (var reader = new StreamReader(httpWebReponse.GetResponseStream()))
-            {
-                return reader.ReadToEnd();
             }
         }
     }
