@@ -5,7 +5,7 @@ namespace IsochronDrafter
 {
     public class Util
     {
-        public static readonly int version = 6;
+        public static readonly int version = 7;
         public static Random random = new Random();
         public const int PORT = 10024;
 
