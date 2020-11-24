@@ -50,7 +50,7 @@ namespace IsochronDrafter
 
         public int PlayerCount => aliases.Count;
 
-        private Tuple<List<string>, List<string>> ReadCardPool(string txt)
+        private List<string> ReadCardPool(string txt)
         {
             var cardStrings = txt.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             cubeName = cardStrings[0];
@@ -71,7 +71,8 @@ namespace IsochronDrafter
             landsInPool.AddRange(lands.Select((name, idx) => idx));
             nonLandsInPool.AddRange(nonLands.Select((name, idx) => idx + lands.Count));
 
-            return Tuple.Create(lands, nonLands);
+            lands.AddRange(nonLands);
+            return lands;
         }
 
         public void PrintServerStartMessage()
@@ -347,27 +348,39 @@ namespace IsochronDrafter
             TrySendMessage("USER_LIST|" + string.Join("|", aliases.Values));
         }
 
-        private static CardInfo[] ReadCardInfo(Tuple<List<string>, List<string>> landsThenNonlands)
+        private static CardInfo[] ReadCardInfo(List<string> landsThenNonlands)
         {
-            var cardsInCube = new HashSet<string>(landsThenNonlands.Item1.Concat(landsThenNonlands.Item2));
-
             const string bulkEndpoint = "https://api.scryfall.com/bulk-data/oracle-cards";
-            string bulkUrl = GetJson(bulkEndpoint).download_uri;
-            var cardsJson = GetJson(bulkUrl);
+            var bulkUrl = JsonConvert.DeserializeAnonymousType(Fetch(bulkEndpoint), new { download_uri = "" }).download_uri;
 
-            var c =
-                from card in cardsJson as JArray
-                let name = (string)card["name"]
-                where card?["image_uris"] != null && cardsInCube.Contains(name)
-                select new CardInfo(name, (int)card["cmc"], (string)card["image_uris"]["border_crop"]);
-            var infoLookup = c.ToLookup(card => card.Name);
+            var allCards = JsonConvert.DeserializeObject<ICollection<ScryfallCard>>(Fetch(bulkUrl));
+            var cardsInCube = new HashSet<string>(landsThenNonlands);
+            var cubeCards = allCards
+                .Where(c => cardsInCube.Contains(c.Name))
+                .ToLookup(card => card.Name);
 
-            return landsThenNonlands.Item1.Concat(landsThenNonlands.Item2)
-                .Select(cardName => infoLookup[cardName].FirstOrDefault())
+            return landsThenNonlands
+                .Select(cardName => cubeCards[cardName].FirstOrDefault() ?? FuzzyLookup(cardName, allCards))
+                .Select(c => new CardInfo(c.Name, c.Cmc, c.ImageUris.BorderCrop))
                 .ToArray();
         }
 
-        private static dynamic GetJson(string url)
+        private static ScryfallCard FuzzyLookup(string cardName, ICollection<ScryfallCard> allCards)
+        {
+            const int maxDistance = 3;
+            var bestMatch =
+                (from candidate in allCards
+                 where Math.Abs(candidate.Name.Length - cardName.Length) < maxDistance // for speed
+                 let levenshteinDistance = Util.LevenshteinDistance(cardName, candidate.Name)
+                 where levenshteinDistance < maxDistance
+                 orderby levenshteinDistance
+                 select new { candidate, levenshteinDistance })
+                .First();
+
+            return bestMatch.candidate;
+        }
+
+        private static string Fetch(string url)
         {
             var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
             WebResponse httpWebReponse;
@@ -381,13 +394,10 @@ namespace IsochronDrafter
                 return null;
             }
 
-            string response;
             using (var reader = new StreamReader(httpWebReponse.GetResponseStream()))
             {
-                response = reader.ReadToEnd();
+                return reader.ReadToEnd();
             }
-
-            return JsonConvert.DeserializeObject(response);
         }
     }
 }

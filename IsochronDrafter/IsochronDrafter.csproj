@@ -92,6 +92,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScryfallCard.cs" />
     <Compile Include="ServerWindow.cs">
       <SubType>Form</SubType>
     </Compile>
