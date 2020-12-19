@@ -260,23 +260,24 @@ namespace IsochronDrafter
         }
 
         public int ColumnCount => columns.Count;
+        private IEnumerable<List<DeckBuilderCard>[]> MaindeckColumns => columns.Take(ColumnCount - 1);
 
         public int GetMaxFirstRowLength()
         {
-            return columns.Select(c => c[0].Count).Max();
+            return MaindeckColumns.Max(c => c[0].Count);
         }
 
-        public void SetCardCounts()
+        private void SetCardCounts()
         {
-            int maindeck = 0;
-            for (int column = 0; column < columns.Count - 1; column++)
-                for (int row = 0; row < 2; row++)
-                    for (int cardNum = 0; cardNum < columns[column][row].Count; cardNum++)
-                        maindeck++;
-            int sideboard = 0;
-            for (int row = 0; row < 2; row++)
-                for (int cardNum = 0; cardNum < columns[columns.Count - 1][row].Count; cardNum++)
-                    sideboard++;
+            var maindeck = MaindeckColumns
+                .SelectMany(row => row)
+                .Sum(list => list.Count);
+
+            var sideboard = columns
+                .Last()
+                .First()
+                .Count;
+
             if (draftWindow != null && maindeck + sideboard > 0)
                 draftWindow.SetCardCounts(maindeck, sideboard);
         }
