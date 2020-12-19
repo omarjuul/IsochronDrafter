@@ -21,24 +21,24 @@ namespace IsochronDrafter
 
         public void PrintLine(string text)
         {
-            textBox1.Invoke(new MethodInvoker(delegate
+            tbxMessageLog.Invoke(new MethodInvoker(delegate
             {
-                if (textBox1.Text.Length != 0)
-                    textBox1.Text += Environment.NewLine;
-                textBox1.Text += text;
-                textBox1.SelectionStart = textBox1.Text.Length;
-                textBox1.ScrollToCaret();
+                if (tbxMessageLog.Text.Length != 0)
+                    tbxMessageLog.Text += Environment.NewLine;
+                tbxMessageLog.Text += text;
+                tbxMessageLog.SelectionStart = tbxMessageLog.Text.Length;
+                tbxMessageLog.ScrollToCaret();
             }));
         }
         public void DraftButtonEnabled(bool enabled)
         {
-            button2.Invoke(new MethodInvoker(delegate
+            btnStartDraft.Invoke(new MethodInvoker(delegate
             {
-                button2.Enabled = enabled;
+                btnStartDraft.Enabled = enabled;
             }));
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void btnBrowse_Click(object sender, EventArgs e)
         {
             DialogResult result = openFileDialog1.ShowDialog();
             if (result == DialogResult.OK)
@@ -47,7 +47,7 @@ namespace IsochronDrafter
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnLaunchServer_Click(object sender, EventArgs e)
         {
             if (tbFile.Text.Length == 0)
             {
@@ -77,8 +77,8 @@ namespace IsochronDrafter
                 isochron.Default.LandsPerPack = tbLands.Text;
                 isochron.Default.NonLandsPerPack = tbNonLands.Text;
                 isochron.Default.Save();
-                button1.Enabled = false;
-                button3.Enabled = false;
+                btnLaunchServer.Enabled = false;
+                btnBrowse.Enabled = false;
                 tbFile.Enabled = false;
                 tbLands.Enabled = false;
                 tbNonLands.Enabled = false;
@@ -87,11 +87,11 @@ namespace IsochronDrafter
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void btnStartDraft_Click(object sender, EventArgs e)
         {
             PrintLine("Starting draft with " + server.PlayerCount + " players.");
             server.StartNextPack();
-            button2.Enabled = false;
+            btnStartDraft.Enabled = false;
         }
 
         protected override void OnClosed(EventArgs e)

@@ -28,13 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
+            this.btnLaunchServer = new System.Windows.Forms.Button();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.button2 = new System.Windows.Forms.Button();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.btnStartDraft = new System.Windows.Forms.Button();
+            this.tbxMessageLog = new System.Windows.Forms.TextBox();
             this.lbFile = new System.Windows.Forms.Label();
             this.tbFile = new System.Windows.Forms.TextBox();
-            this.button3 = new System.Windows.Forms.Button();
+            this.btnBrowse = new System.Windows.Forms.Button();
             this.lbLands = new System.Windows.Forms.Label();
             this.tbLands = new System.Windows.Forms.TextBox();
             this.lbNonLands = new System.Windows.Forms.Label();
@@ -43,42 +43,42 @@
             this.tbPacks = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
-            // button1
+            // btnLaunchServer
             // 
-            this.button1.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.button1.Location = new System.Drawing.Point(268, 450);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(101, 23);
-            this.button1.TabIndex = 1;
-            this.button1.Text = "Launch Server";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.btnLaunchServer.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.btnLaunchServer.Location = new System.Drawing.Point(268, 450);
+            this.btnLaunchServer.Name = "btnLaunchServer";
+            this.btnLaunchServer.Size = new System.Drawing.Size(101, 23);
+            this.btnLaunchServer.TabIndex = 1;
+            this.btnLaunchServer.Text = "Launch Server";
+            this.btnLaunchServer.UseVisualStyleBackColor = true;
+            this.btnLaunchServer.Click += new System.EventHandler(this.btnLaunchServer_Click);
             // 
             // openFileDialog1
             // 
             this.openFileDialog1.Filter = "Isochron Drafter csv files|*.csv";
             // 
-            // button2
+            // btnStartDraft
             // 
-            this.button2.Enabled = false;
-            this.button2.Location = new System.Drawing.Point(375, 450);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(85, 23);
-            this.button2.TabIndex = 2;
-            this.button2.Text = "Start Draft";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.btnStartDraft.Enabled = false;
+            this.btnStartDraft.Location = new System.Drawing.Point(375, 450);
+            this.btnStartDraft.Name = "btnStartDraft";
+            this.btnStartDraft.Size = new System.Drawing.Size(85, 23);
+            this.btnStartDraft.TabIndex = 2;
+            this.btnStartDraft.Text = "Start Draft";
+            this.btnStartDraft.UseVisualStyleBackColor = true;
+            this.btnStartDraft.Click += new System.EventHandler(this.btnStartDraft_Click);
             // 
-            // textBox1
+            // tbxMessageLog
             // 
-            this.textBox1.BackColor = System.Drawing.SystemColors.Window;
-            this.textBox1.Location = new System.Drawing.Point(12, 12);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(725, 385);
-            this.textBox1.TabIndex = 1;
-            this.textBox1.TabStop = false;
+            this.tbxMessageLog.BackColor = System.Drawing.SystemColors.Window;
+            this.tbxMessageLog.Location = new System.Drawing.Point(12, 12);
+            this.tbxMessageLog.Multiline = true;
+            this.tbxMessageLog.Name = "tbxMessageLog";
+            this.tbxMessageLog.ReadOnly = true;
+            this.tbxMessageLog.Size = new System.Drawing.Size(725, 385);
+            this.tbxMessageLog.TabIndex = 1;
+            this.tbxMessageLog.TabStop = false;
             // 
             // lbFile
             // 
@@ -96,15 +96,15 @@
             this.tbFile.Size = new System.Drawing.Size(554, 20);
             this.tbFile.TabIndex = 3;
             // 
-            // button3
+            // btnBrowse
             // 
-            this.button3.Location = new System.Drawing.Point(662, 399);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(75, 23);
-            this.button3.TabIndex = 4;
-            this.button3.Text = "Browse...";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
+            this.btnBrowse.Location = new System.Drawing.Point(662, 399);
+            this.btnBrowse.Name = "btnBrowse";
+            this.btnBrowse.Size = new System.Drawing.Size(75, 23);
+            this.btnBrowse.TabIndex = 4;
+            this.btnBrowse.Text = "Browse...";
+            this.btnBrowse.UseVisualStyleBackColor = true;
+            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // lbLands
             // 
@@ -165,12 +165,12 @@
             this.Controls.Add(this.lbPacks);
             this.Controls.Add(this.lbNonLands);
             this.Controls.Add(this.lbLands);
-            this.Controls.Add(this.button3);
+            this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.tbFile);
             this.Controls.Add(this.lbFile);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
-            this.Controls.Add(this.textBox1);
+            this.Controls.Add(this.btnStartDraft);
+            this.Controls.Add(this.btnLaunchServer);
+            this.Controls.Add(this.tbxMessageLog);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "ServerWindow";
             this.Text = "Isochron Drafter Server";
@@ -181,13 +181,13 @@
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button btnLaunchServer;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.Button button2;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button btnStartDraft;
+        private System.Windows.Forms.TextBox tbxMessageLog;
         private System.Windows.Forms.Label lbFile;
         private System.Windows.Forms.TextBox tbFile;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Label lbLands;
         private System.Windows.Forms.TextBox tbLands;
         private System.Windows.Forms.Label lbNonLands;
