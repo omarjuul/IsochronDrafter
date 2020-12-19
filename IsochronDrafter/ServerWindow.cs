@@ -70,21 +70,19 @@ namespace IsochronDrafter
                 return;
             }
 
+            btnLaunchServer.Enabled = false;
+            btnBrowse.Enabled = false;
+            tbFile.Enabled = false;
+            tbLands.Enabled = false;
+            tbNonLands.Enabled = false;
+            tbPacks.Enabled = false;
+            isochron.Default.SetFile = tbFile.Text;
+            isochron.Default.Packs = tbPacks.Text;
+            isochron.Default.LandsPerPack = tbLands.Text;
+            isochron.Default.NonLandsPerPack = tbNonLands.Text;
+            isochron.Default.Save();
             server = new DraftServer(this, tbFile.Text, packs, lands, nonLands);
-            {
-                isochron.Default.SetFile = tbFile.Text;
-                isochron.Default.Packs = tbPacks.Text;
-                isochron.Default.LandsPerPack = tbLands.Text;
-                isochron.Default.NonLandsPerPack = tbNonLands.Text;
-                isochron.Default.Save();
-                btnLaunchServer.Enabled = false;
-                btnBrowse.Enabled = false;
-                tbFile.Enabled = false;
-                tbLands.Enabled = false;
-                tbNonLands.Enabled = false;
-                tbPacks.Enabled = false;
-                server.PrintServerStartMessage();
-            }
+            server.PrintServerStartMessage();
         }
 
         private void btnStartDraft_Click(object sender, EventArgs e)
