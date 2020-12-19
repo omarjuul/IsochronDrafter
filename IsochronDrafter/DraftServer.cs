@@ -278,13 +278,10 @@ namespace IsochronDrafter
             if (packNumber == 1) // Begin the draft.
             {
                 draftStarted = true;
-                string[] shuffledAliases = aliases.Values.ToArray().OrderBy(x => Util.random.Next()).ToArray();
-                draftStates = new DraftState[aliases.Count];
-                for (int i = 0; i < shuffledAliases.Length; i++)
-                {
-                    string alias = shuffledAliases[i];
-                    draftStates[i] = new DraftState(alias);
-                }
+                draftStates = aliases.Values
+                    .OrderBy(x => Util.random.Next())
+                    .Select(a=>new DraftState(a))
+                    .ToArray();
             }
             else if (packNumber == packs + 1) // End the draft.
             {
